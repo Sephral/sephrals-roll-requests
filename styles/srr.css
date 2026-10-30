@@ -1,0 +1,395 @@
+/* Sephral’s Roll Requests */
+
+/* Colors: the warm signature look by default, the dark Foundry look per user */
+.srr-card,
+.srr-app .srr-body {
+  --srr-paper: #fbf6ea;
+  --srr-card: rgb(255 250 240 / 0.92);
+  --srr-ink: #1f1a17;
+  --srr-muted: #6f655d;
+  --srr-line: rgb(73 49 32 / 0.14);
+  --srr-soft: rgb(73 49 32 / 0.07);
+  --srr-field: #fffdf7;
+  --srr-accent: #b5512d;
+  --srr-accent-soft: rgb(181 81 45 / 0.12);
+  --srr-on-accent: #fffaf0;
+  --srr-pass: #2f7d4a;
+  --srr-fail: #a8322a;
+  --srr-radius: 10px;
+}
+
+.srr-card[data-srr-theme="foundry"],
+.srr-app .srr-body[data-srr-theme="foundry"] {
+  --srr-paper: #24211e;
+  --srr-card: rgb(255 255 255 / 0.05);
+  --srr-ink: #ece5d8;
+  --srr-muted: #aba191;
+  --srr-line: rgb(255 255 255 / 0.12);
+  --srr-soft: rgb(255 255 255 / 0.06);
+  --srr-field: rgb(0 0 0 / 0.25);
+  --srr-accent: #d8784e;
+  --srr-accent-soft: rgb(216 120 78 / 0.18);
+  --srr-on-accent: #1c1a18;
+  --srr-pass: #7fca8f;
+  --srr-fail: #e8857c;
+  --srr-radius: 6px;
+}
+
+/* -------------------------------------------- */
+/*  Card                                        */
+/* -------------------------------------------- */
+
+.srr-card {
+  color: var(--srr-ink);
+  background: var(--srr-paper);
+  border: 1px solid var(--srr-line);
+  border-radius: var(--srr-radius);
+  padding: 0.5rem 0.55rem 0.45rem;
+  font-size: var(--font-size-13, 13px);
+}
+
+.srr-card-head {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.srr-card-head > i {
+  font-size: 1.35rem;
+  color: var(--srr-accent);
+}
+
+.srr-card-head strong {
+  display: block;
+  font-size: 1.05em;
+  line-height: 1.25;
+}
+
+.srr-card-meta {
+  display: block;
+  color: var(--srr-muted);
+  font-size: 0.9em;
+}
+
+.srr-card-note {
+  margin: 0.35rem 0 0;
+  padding: 0.3rem 0.45rem;
+  border-radius: calc(var(--srr-radius) - 4px);
+  background: var(--srr-soft);
+  font-style: italic;
+}
+
+.srr-entries {
+  list-style: none;
+  margin: 0.45rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.srr-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.1rem;
+  padding: 0.15rem 0.3rem;
+  border-radius: calc(var(--srr-radius) - 4px);
+  background: var(--srr-card);
+  border-left: 3px solid transparent;
+}
+
+.srr-entry.is-success { border-left-color: var(--srr-pass); }
+.srr-entry.is-failure { border-left-color: var(--srr-fail); }
+.srr-entry.is-rolled { border-left-color: var(--srr-muted); }
+
+.srr-entry-img {
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: 0 0 1.75rem;
+  object-fit: cover;
+  border: none;
+  border-radius: 50%;
+  background: var(--srr-soft);
+}
+
+.srr-entry-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.srr-entry-result {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.srr-outcome {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.srr-outcome small {
+  color: var(--srr-muted);
+}
+
+.srr-total {
+  min-width: 1.8rem;
+  text-align: center;
+  font-size: 1.1em;
+}
+
+.srr-pass { color: var(--srr-pass); }
+.srr-fail { color: var(--srr-fail); }
+.srr-nat-20 { color: #c99a2e; }
+.srr-nat-1 { color: var(--srr-fail); }
+.srr-waiting,
+.srr-rolled { color: var(--srr-muted); }
+
+.srr-card button,
+.srr-app button {
+  width: auto;
+  flex: 0 0 auto;
+  line-height: 1.4;
+}
+
+.srr-card .srr-roll,
+.srr-app .srr-roll,
+.srr-app .srr-primary {
+  padding: 0.1rem 0.6rem;
+  color: var(--srr-on-accent);
+  background: var(--srr-accent);
+  border: 1px solid var(--srr-accent);
+  border-radius: calc(var(--srr-radius) - 4px);
+}
+
+.srr-card .srr-reset {
+  padding: 0 0.35rem;
+  background: transparent;
+  border: none;
+  color: var(--srr-muted);
+}
+
+.srr-card-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.45rem;
+  color: var(--srr-muted);
+}
+
+.srr-card-foot > span:first-child {
+  flex: 1;
+}
+
+.srr-group {
+  font-weight: bold;
+}
+
+.srr-group.is-success { color: var(--srr-pass); }
+.srr-group.is-failure { color: var(--srr-fail); }
+
+.srr-card .srr-rest {
+  padding: 0.1rem 0.5rem;
+  font-size: 0.92em;
+}
+
+/* -------------------------------------------- */
+/*  Windows                                     */
+/* -------------------------------------------- */
+
+.srr-app .window-content {
+  padding: 0;
+}
+
+.srr-app .srr-body {
+  color: var(--srr-ink);
+  background: var(--srr-paper);
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.75rem;
+  min-height: 100%;
+}
+
+.srr-app h3 {
+  margin: 0 0 0.35rem;
+  border: none;
+  font-size: 1.05rem;
+  color: var(--srr-ink);
+}
+
+.srr-section {
+  padding: 0.6rem;
+  border: 1px solid var(--srr-line);
+  border-radius: var(--srr-radius);
+  background: var(--srr-card);
+}
+
+.srr-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.srr-section-tools {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.srr-section-tools button {
+  font-size: 0.85rem;
+  padding: 0 0.45rem;
+}
+
+.srr-candidates {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  max-height: 15rem;
+  overflow-y: auto;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.srr-candidate {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: calc(var(--srr-radius) - 4px);
+  padding: 0.1rem 0.25rem;
+}
+
+.srr-candidate.is-checked {
+  background: var(--srr-accent-soft);
+}
+
+.srr-candidate label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.srr-candidate img {
+  width: 1.7rem;
+  height: 1.7rem;
+  object-fit: cover;
+  border: none;
+  border-radius: 50%;
+}
+
+.srr-candidate-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.srr-candidate-owner {
+  color: var(--srr-muted);
+  font-size: 0.85em;
+}
+
+.srr-app .srr-icon {
+  padding: 0 0.35rem;
+  background: transparent;
+  border: none;
+  color: var(--srr-muted);
+}
+
+.srr-drop-hint,
+.srr-empty,
+.srr-app .hint {
+  margin: 0.35rem 0 0;
+  color: var(--srr-muted);
+  font-size: 0.85rem;
+}
+
+.srr-app .form-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.35rem 0;
+}
+
+.srr-app .form-group > label:first-child {
+  flex: 0 0 9rem;
+}
+
+.srr-app .form-group select,
+.srr-app .form-group input[type="text"] {
+  flex: 1;
+}
+
+.srr-app .form-group input[type="number"] {
+  flex: 0 0 5rem;
+}
+
+.srr-app input,
+.srr-app select {
+  background: var(--srr-field);
+  color: var(--srr-ink);
+}
+
+.srr-check {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.25rem 0;
+}
+
+.srr-formula.is-hidden {
+  display: none;
+}
+
+.srr-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.srr-buttons button {
+  padding: 0.25rem 0.9rem;
+}
+
+/* -------------------------------------------- */
+/*  Prompt                                      */
+/* -------------------------------------------- */
+
+.srr-prompt-intro {
+  margin: 0;
+  color: var(--srr-muted);
+}
+
+.srr-prompt-request {
+  padding: 0.5rem 0.55rem;
+  border: 1px solid var(--srr-line);
+  border-radius: var(--srr-radius);
+  background: var(--srr-card);
+}
+
+.srr-prompt-request header strong {
+  display: block;
+  font-size: 1.05rem;
+}
+
+.srr-prompt-hint {
+  margin: 0.3rem 0 0;
+  font-weight: bold;
+  color: var(--srr-accent);
+}
+
+.srr-card button,
+.srr-app button {
+  text-transform: none;
+}

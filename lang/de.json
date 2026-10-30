@@ -1,0 +1,172 @@
+{
+  "SRR": {
+    "gear": "Einstellungen",
+    "LANGUAGE": {
+      "default": "Wie Foundry",
+      "de": "Deutsch",
+      "en": "Englisch"
+    },
+    "SETTINGS": {
+      "uiLanguage": {
+        "name": "Modulsprache",
+        "hint": "Die Sprache von Roll Requests für dich. Wie Foundry folgt der Sprache deiner Foundry-Oberfläche."
+      },
+      "theme": {
+        "name": "Aussehen",
+        "hint": "Signature ist warm und hell, Foundry folgt dem dunklen Aussehen von Foundry. Gilt für das Anforderungsfenster, das Wurffenster und die Karten bei dir.",
+        "signature": "Signature",
+        "foundry": "Foundry"
+      },
+      "promptWindow": {
+        "name": "Wurffenster öffnen",
+        "hint": "Wenn die SL einen deiner Charaktere würfeln lässt, öffnet sich ein kleines Fenster mit den Wurfknöpfen. Auf der Chatkarte stehen die Knöpfe in jedem Fall."
+      },
+      "promptSound": {
+        "name": "Ton bei einer Anforderung",
+        "hint": "Spielt den Benachrichtigungston von Foundry, wenn eine neue Anforderung für deine Charaktere kommt."
+      },
+      "gmFastForward": {
+        "name": "Deine Würfe ohne Dialog",
+        "hint": "Wenn du von einer Karte aus für einen Charakter würfelst, entfällt der Wurfdialog des Systems. Mit Umschalt bekommst du ihn trotzdem, oder umgekehrt, wenn das aus ist."
+      },
+      "sceneControl": {
+        "name": "Knopf in der Token-Leiste",
+        "hint": "Zeigt den Knopf für Anforderungen in der Token-Leiste links."
+      }
+    },
+    "Keys": {
+      "openRequest": "Würfe anfordern",
+      "openRequestHint": "Öffnet das Anforderungsfenster (SL).",
+      "openPrompt": "Mein Wurffenster öffnen"
+    },
+    "Request": {
+      "title": "Würfe anfordern",
+      "who": "Wer würfelt",
+      "selected": "Ausgewählte Tokens",
+      "characters": "Spielercharaktere",
+      "none": "Keine",
+      "noCandidates": "Wähle Tokens auf der Karte aus oder zieh Akteure hierher.",
+      "dropHint": "Zieh Akteure aus der Seitenleiste oder Tokens hierher, um sie hinzuzufügen.",
+      "fromToken": "Nur dieser Token",
+      "npc": "Kein Spieler",
+      "remove": "Entfernen",
+      "what": "Was",
+      "roll": "Wurf",
+      "formula": "Formel",
+      "label": "Name",
+      "labelHint": "Steht auf der Karte",
+      "dc": "SG",
+      "tn": "Mindestwurf",
+      "noDc": "keiner",
+      "showDc": "Spieler sehen den SG",
+      "advantage": "Hinweis",
+      "mode": "Ergebnisse",
+      "note": "Notiz",
+      "noteHint": "Optional, steht auf der Karte",
+      "group": "Gruppenprobe: Die Gruppe schafft es, wenn mindestens die Hälfte es schafft",
+      "autoRollNpcs": "Für Charaktere ohne Spieler sofort würfeln",
+      "send": "Anfordern",
+      "cancel": "Abbrechen",
+      "noneSelected": "Es sind keine Tokens ausgewählt."
+    },
+    "Type": {
+      "save": "Rettungswürfe",
+      "check": "Attributsproben",
+      "skill": "Fertigkeiten",
+      "tool": "Werkzeuge",
+      "attribute": "Attribute",
+      "formula": "Eigene Formel"
+    },
+    "Label": {
+      "save": "Rettungswurf: {name}",
+      "check": "Probe: {name}",
+      "skill": "{name}",
+      "tool": "{name}",
+      "attribute": "{name}"
+    },
+    "Mode": {
+      "public": "Öffentlich",
+      "gm": "Nur SL",
+      "blind": "Verdeckt",
+      "publicHint": "Alle sehen jeden Wurf und die Ergebnisse auf der Karte.",
+      "gmHint": "Spieler sehen ihre eigenen Würfe. Die übrigen Ergebnisse sind nur für dich.",
+      "blindHint": "Niemand außer dir sieht die Ergebnisse, auch nicht, wer gewürfelt hat."
+    },
+    "Advantage": {
+      "normal": "Keiner",
+      "advantage": "Vorteil",
+      "disadvantage": "Nachteil",
+      "fortune": "Glück (zweimal würfeln, das höhere zählt)",
+      "misfortune": "Pech (zweimal würfeln, das niedrigere zählt)"
+    },
+    "Card": {
+      "dc": "SG {dc}",
+      "tn": "MW {dc}",
+      "hidden": "verdeckt",
+      "dcHidden": "Geheimer SG",
+      "roll": "Würfeln",
+      "waiting": "Wartet auf den Wurf",
+      "rolled": "Gewürfelt",
+      "nat20": "Natürliche 20",
+      "nat1": "Natürliche 1",
+      "reset": "Noch einmal würfeln",
+      "progress": "{rolled} von {count} gewürfelt",
+      "passed": "{passed} von {count} geschafft",
+      "allRolled": "Alle haben gewürfelt",
+      "groupCheck": "Gruppenprobe",
+      "group": {
+        "success": "Die Gruppe schafft es",
+        "failure": "Die Gruppe scheitert"
+      },
+      "rollRest": "Den Rest würfeln"
+    },
+    "Outcome": {
+      "success": "Erfolg",
+      "failure": "Fehlschlag",
+      "criticalSuccess": "Kritischer Erfolg",
+      "criticalFailure": "Kritischer Fehlschlag",
+      "raises": "Steigerung ×{count}"
+    },
+    "Prompt": {
+      "title": "Dein Wurf",
+      "intro": "Die SL bittet dich zu würfeln.",
+      "nothing": "Es wartet kein Wurf auf dich."
+    },
+    "Error": {
+      "noType": "Wähle, was gewürfelt wird.",
+      "noFormula": "Gib eine Formel ein.",
+      "noKey": "Wähle, was gewürfelt wird.",
+      "noActors": "Wähle mindestens einen Charakter.",
+      "gmOnly": "Nur eine SL kann Würfe anfordern.",
+      "unknownChoice": "Diesen Wurf gibt es in diesem Spielsystem nicht.",
+      "noActor": "Der Charakter {name} ist nicht zu finden.",
+      "rollFailed": "Der Wurf für {name} ist fehlgeschlagen, siehe Konsole."
+    },
+    "SELFTEST": {
+      "Title": "Selbsttest",
+      "Run": "Selbsttest starten",
+      "Hint": "Prüft, was Roll Requests von Foundry und dem Spielsystem braucht, und meldet das Ergebnis im Chat.",
+      "Problems": "Selbsttest: {problems} von {checks} Prüfungen fehlgeschlagen.",
+      "Passed": "Selbsttest: alle {checks} Prüfungen bestanden.",
+      "Version": "Foundry {current}, geprüft mit {tested}.",
+      "SystemVersion": "{system} {current}, geprüft mit {tested}.",
+      "Generic": "{system} hat in Roll Requests keine eigenen Würfe: Anforderungen nutzen eine Formel.",
+      "Untested": "{system} {current} wurde mit Roll Requests noch nicht geprüft.",
+      "NewVersions": "Roll Requests wurde mit älteren Versionen als {versions} geprüft. Starte den Selbsttest in den Moduleinstellungen.",
+      "Speaker": "Foundry kann den Charakter einer Chatnachricht nicht nennen.",
+      "Message": "Chatnachrichten lassen sich vor dem Anlegen nicht ändern.",
+      "NoGM": "Keine SL ist online, deshalb können keine Ergebnisse auf die Karten geschrieben werden.",
+      "Choices": "Die Würfe von {system} lassen sich nicht lesen.",
+      "Method": "Die Charaktere haben keine Wurfmethode {method} ({actor}).",
+      "Judge": "Das Bewerten eines Ergebnisses gegen den SG funktioniert nicht.",
+      "Texts": "Es fehlen Texte: {keys}"
+    },
+    "DEBUG": {
+      "Title": "Debug-Datei",
+      "Save": "Debug-Datei speichern",
+      "Hint": "Speichert eine Datei für Fehlerberichte über alle Module von Sephral in dieser Welt: Versionen, Einstellungen und was die Module aufgezeichnet haben, etwa die letzten Chatnachrichten, die sie gelesen haben. Sie enthält Chattext und Flüsternachrichten, prüfe sie vor dem Teilen.",
+      "Entry": "Debug-Datei speichern (Sephral’s Module)",
+      "Saved": "Debug-Datei {file} gespeichert. Sie enthält Chattext und Flüsternachrichten, prüfe sie vor dem Teilen."
+    }
+  }
+}

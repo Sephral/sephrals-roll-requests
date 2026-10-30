@@ -1,0 +1,16 @@
+{
+  "name": "sephrals-roll-requests",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check scripts/adapters/common.mjs && node --check scripts/adapters/crucible.mjs && node --check scripts/adapters/dnd5e.mjs && node --check scripts/adapters/index.mjs && node --check scripts/adapters/pf2e.mjs && node --check scripts/adapters/swade.mjs && node --check scripts/card.mjs && node --check scripts/config.mjs && node --check scripts/debug.mjs && node --check scripts/language.mjs && node --check scripts/prompt-app.mjs && node --check scripts/request-app.mjs && node --check scripts/request-model.mjs && node --check scripts/requests.mjs && node --check scripts/rolling.mjs && node --check scripts/selftest.mjs && node --check scripts/settings.mjs && node --check scripts/srr.mjs && node --check scripts/debug-file.mjs",
+    "check:manifest": "node build/validate-manifest.mjs",
+    "test": "node --test",
+    "test:coverage": "node --test --experimental-test-coverage",
+    "release:prepare": "node build/prepare-release.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

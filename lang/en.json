@@ -1,0 +1,172 @@
+{
+  "SRR": {
+    "gear": "Settings",
+    "LANGUAGE": {
+      "default": "Like Foundry",
+      "de": "German",
+      "en": "English"
+    },
+    "SETTINGS": {
+      "uiLanguage": {
+        "name": "Module language",
+        "hint": "The language of Roll Requests for you. Like Foundry follows the language of your Foundry interface."
+      },
+      "theme": {
+        "name": "Look",
+        "hint": "Signature is warm and light, Foundry follows the dark look of Foundry. Applies to the request window, the roll window and the cards for you.",
+        "signature": "Signature",
+        "foundry": "Foundry"
+      },
+      "promptWindow": {
+        "name": "Open a roll window",
+        "hint": "When the GM asks one of your characters to roll, a small window with the roll buttons opens. The buttons are on the chat card either way."
+      },
+      "promptSound": {
+        "name": "Sound with a request",
+        "hint": "Plays Foundry's notification sound when a new request for your characters arrives."
+      },
+      "gmFastForward": {
+        "name": "Your rolls skip the dialog",
+        "hint": "When you roll for a character from a card, the system's roll dialog is skipped. Hold Shift to get it anyway, or the other way round when this is off."
+      },
+      "sceneControl": {
+        "name": "Button in the token controls",
+        "hint": "Shows the request button in the token controls on the left."
+      }
+    },
+    "Keys": {
+      "openRequest": "Request rolls",
+      "openRequestHint": "Opens the request window (GM).",
+      "openPrompt": "Open my roll window"
+    },
+    "Request": {
+      "title": "Request rolls",
+      "who": "Who rolls",
+      "selected": "Selected tokens",
+      "characters": "Player characters",
+      "none": "None",
+      "noCandidates": "Select tokens on the map or drag actors here.",
+      "dropHint": "Drag actors from the sidebar or tokens here to add them.",
+      "fromToken": "This token only",
+      "npc": "No player",
+      "remove": "Remove",
+      "what": "What",
+      "roll": "Roll",
+      "formula": "Formula",
+      "label": "Name",
+      "labelHint": "Shown on the card",
+      "dc": "DC",
+      "tn": "Target number",
+      "noDc": "none",
+      "showDc": "Players see the DC",
+      "advantage": "Hint",
+      "mode": "Results",
+      "note": "Note",
+      "noteHint": "Optional, shown on the card",
+      "group": "Group check: the group succeeds when at least half succeed",
+      "autoRollNpcs": "Roll for characters without a player at once",
+      "send": "Request",
+      "cancel": "Cancel",
+      "noneSelected": "No tokens are selected."
+    },
+    "Type": {
+      "save": "Saving throws",
+      "check": "Ability checks",
+      "skill": "Skills",
+      "tool": "Tools",
+      "attribute": "Attributes",
+      "formula": "Own formula"
+    },
+    "Label": {
+      "save": "{name} saving throw",
+      "check": "{name} check",
+      "skill": "{name}",
+      "tool": "{name}",
+      "attribute": "{name}"
+    },
+    "Mode": {
+      "public": "Public",
+      "gm": "GM only",
+      "blind": "Blind",
+      "publicHint": "Everyone sees every roll and the results on the card.",
+      "gmHint": "Players see their own rolls. The other results are only for you.",
+      "blindHint": "Nobody but you sees the results, not even the player who rolled."
+    },
+    "Advantage": {
+      "normal": "None",
+      "advantage": "Advantage",
+      "disadvantage": "Disadvantage",
+      "fortune": "Fortune (roll twice, keep the higher)",
+      "misfortune": "Misfortune (roll twice, keep the lower)"
+    },
+    "Card": {
+      "dc": "DC {dc}",
+      "tn": "TN {dc}",
+      "hidden": "hidden",
+      "dcHidden": "Secret DC",
+      "roll": "Roll",
+      "waiting": "Waiting for the roll",
+      "rolled": "Rolled",
+      "nat20": "Natural 20",
+      "nat1": "Natural 1",
+      "reset": "Roll again",
+      "progress": "{rolled} of {count} rolled",
+      "passed": "{passed} of {count} passed",
+      "allRolled": "Everyone has rolled",
+      "groupCheck": "Group check",
+      "group": {
+        "success": "The group succeeds",
+        "failure": "The group fails"
+      },
+      "rollRest": "Roll the rest"
+    },
+    "Outcome": {
+      "success": "Success",
+      "failure": "Failure",
+      "criticalSuccess": "Critical success",
+      "criticalFailure": "Critical failure",
+      "raises": "Raise ×{count}"
+    },
+    "Prompt": {
+      "title": "Your roll",
+      "intro": "The GM asks you to roll.",
+      "nothing": "No roll is waiting for you."
+    },
+    "Error": {
+      "noType": "Choose what to roll.",
+      "noFormula": "Enter a formula.",
+      "noKey": "Choose what to roll.",
+      "noActors": "Choose at least one character.",
+      "gmOnly": "Only a GM can request rolls.",
+      "unknownChoice": "This roll does not exist in this game system.",
+      "noActor": "The character {name} cannot be found.",
+      "rollFailed": "The roll for {name} failed, see the console."
+    },
+    "SELFTEST": {
+      "Title": "Self test",
+      "Run": "Run self test",
+      "Hint": "Checks what Roll Requests needs from Foundry and the game system and reports in the chat.",
+      "Problems": "Self test: {problems} of {checks} checks failed.",
+      "Passed": "Self test: all {checks} checks passed.",
+      "Version": "Foundry {current}, checked with {tested}.",
+      "SystemVersion": "{system} {current}, checked with {tested}.",
+      "Generic": "{system} has no own rolls in Roll Requests: requests use a formula.",
+      "Untested": "{system} {current} has not been checked with Roll Requests yet.",
+      "NewVersions": "Roll Requests was checked with older versions than {versions}. Run the self test in the module settings.",
+      "Speaker": "Foundry cannot name the character of a chat message.",
+      "Message": "Chat messages cannot be changed before they are created.",
+      "NoGM": "No GM is online, so results cannot be written to the cards.",
+      "Choices": "The rolls of {system} cannot be read.",
+      "Method": "The characters have no roll method {method} ({actor}).",
+      "Judge": "Judging a result against the DC does not work.",
+      "Texts": "Texts are missing: {keys}"
+    },
+    "DEBUG": {
+      "Title": "Debug file",
+      "Save": "Save debug file",
+      "Hint": "Saves one file for bug reports about all of Sephral’s modules in this world: versions, settings and what the modules recorded, such as the latest chat messages they read. It contains chat text and whispers, check it before you share it.",
+      "Entry": "Save Debug File (Sephral’s Modules)",
+      "Saved": "Debug file {file} saved. It contains chat text and whispers, check it before you share it."
+    }
+  }
+}
