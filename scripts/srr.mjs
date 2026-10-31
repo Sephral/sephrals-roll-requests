@@ -1,7 +1,8 @@
 import {getAdapter, rollGroups} from "./adapters/index.mjs";
-import {HOOKS, MODULE_ID, isShown, setting, t} from "./config.mjs";
+import {HOOKS, MODULE_ID, TESTED_VERSIONS, isShown, setting, t} from "./config.mjs";
 import {registerDebug} from "./debug.mjs";
 import {saveDebugFile} from "./debug-file.mjs";
+import {registerHubModule} from "./hub.mjs";
 import {renderCard} from "./card.mjs";
 import {applyModuleLanguage} from "./language.mjs";
 import {openPrompt, refreshPrompt} from "./prompt-app.mjs";
@@ -18,6 +19,7 @@ import {registerUsage} from "./usage.mjs";
 const TOOL = "srrRequest";
 
 Hooks.once("init", () => {
+  registerHubModule({moduleId: MODULE_ID, tested: TESTED_VERSIONS});
   registerSettings({
     language: value => changeLanguage(value, redraw),
     redraw,
