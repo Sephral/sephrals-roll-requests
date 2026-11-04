@@ -10,26 +10,28 @@
 
 ## Highlights
 
-* **Ask anyone:** the selected tokens, all player characters or any actor you drag into the window. Alt+R opens it.
-* **The right roll every time:** saving throws, ability checks, skills and tools as your game system names them, or your own formula. Start it with advantage or disadvantage if you like.
-* **One click for players:** a small window and the chat card show a roll button for each of their characters. The roll is the system's own, with its dialog, bonuses and dice.
+* **Ask anyone:** the characters of the scene, your party, the selected tokens or any actor you drag in. Alt+R opens it.
+* **Every roll one click away:** saves, checks, skills and tools as buttons, with initiative, death saves and your own formula. Type a few letters to find one, or save a preset.
+* **One click for players:** a small window and the chat card show a roll button for each character. The roll is the system's own, with its dialog and bonuses.
 * **One live card:** totals, pass or fail against the DC and “3 of 4 passed” at a glance, filled in while your players roll. Natural 20s and 1s stand out.
-* **Secret when you want it:** hide the DC, keep the results for your eyes only, or let nobody see their own roll.
-* **Group checks:** the group succeeds when at least half succeed, worked out for you.
+* **Let them choose:** mark Athletics and Acrobatics and each player picks one.
+* **Secret when you want it:** hide the DC, keep the results for your eyes only, let nobody see their own roll, or roll silently so the players never notice.
+* **Passive values:** compare passive Perception in D&D 5e without a roll, on a card only you see.
+* **Group checks:** half of the group, all of them or just one has to succeed, worked out for you.
 * **NPCs roll themselves:** characters without a player roll at once, and one click rolls the rest for anyone who is away.
 * **Rerolls count:** a hero point in Pathfinder 2e or a benny in Savage Worlds replaces the result on the card, and you can let anyone roll again.
-* **Nothing gets lost:** rolls made while no GM is online reach their card as soon as a GM joins, and a player who logs in late still gets the roll window.
+* **Nothing gets lost:** rolls made without a GM reach their card when one joins, and late players still get the roll window.
 * **Many systems:** D&D 5e, Pathfinder 2e, Savage Worlds and Crucible, formulas in any other system.
 
 ## How it works
 
 1. Select tokens and press Alt+R, or click the d20 in the token controls.
-2. Pick the roll, set a DC if you like, and send the request.
+2. Click the roll, set a DC if you like, and send the request.
 3. Watch the card fill up while your players roll.
 
 ## Good to know
 
-Players need to be online to roll, the GM can roll for anyone from the card. A GM has to be connected for results to reach the card, rolls made without one are added when a GM joins.
+Players need to be online to roll, the GM can roll for anyone from the card.
 
 ## Install
 

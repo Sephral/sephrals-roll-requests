@@ -6,8 +6,8 @@
 
 import {getAdapter} from "./adapters/index.mjs";
 import {MODULE_ID, esc, setting, t} from "./config.mjs";
-import {summarize, viewFor} from "./request-model.mjs";
-import {canRoll, describe, requestOf, resetEntry} from "./requests.mjs";
+import {rollId, summarize, viewFor} from "./request-model.mjs";
+import {canRoll, describe, describeChoice, describeRoll, requestOf, resetEntry} from "./requests.mjs";
 import {gmFastForward, rollEntry, rollRemaining} from "./rolling.mjs";
 
 /**
@@ -28,7 +28,7 @@ export function metaLine(request, dcVisible) {
   else if ( Number.isFinite(adapter.defaultDc) ) parts.push(t(dcKey, {dc: adapter.defaultDc}));
   if ( request.mode !== "public" ) parts.push(t(`SRR.Mode.${request.mode}`));
   if ( request.advantage !== "normal" ) parts.push(advantageLabel(request));
-  if ( request.group ) parts.push(t("SRR.Card.groupCheck"));
+  if ( request.group ) parts.push(t(`SRR.Card.groupRule.${request.groupRule ?? "half"}`));
   return parts.join(" · ");
 }
 
@@ -56,6 +56,21 @@ function outcomeText(result, scheme) {
 }
 
 /**
+ * The roll buttons of an entry when each character picks one of several rolls.
+ * @param {object} request
+ * @param {string} action
+ * @param {object} entry
+ * @param {string} [data]      More data attributes, as ready HTML
+ * @returns {string}
+ */
+export function choiceButtons(request, action, entry, data="") {
+  const buttons = request.choices.map(choice => `<button type="button" class="srr-roll" data-action="${action}"
+    data-entry-id="${esc(entry.id)}" data-choice="${esc(rollId(choice.type, choice.key))}"${data}>
+    <i class="fa-solid fa-dice-d20" inert></i> ${esc(describeRoll(choice))}</button>`).join("");
+  return `<div class="srr-choice-row">${buttons}</div>`;
+}
+
+/**
  * The result cell of an entry.
  * @param {object} request
  * @param {object} entry
@@ -66,6 +81,7 @@ function outcomeText(result, scheme) {
 function resultCell(request, entry, view, rollable) {
   const result = request.results?.[entry.id];
   if ( !result ) {
+    if ( rollable && request.choices?.length ) return "";
     if ( rollable ) {
       return `<button type="button" class="srr-roll" data-action="srrRoll" data-entry-id="${esc(entry.id)}">
         <i class="fa-solid fa-dice-d20" inert></i> ${esc(t("SRR.Card.roll"))}</button>`;
@@ -103,13 +119,15 @@ export function cardHtml(request) {
     const shown = view.entry(entry);
     const state = !result ? "pending" : (!shown.outcome || (result.success === null)) ? "rolled"
       : result.success ? "success" : "failure";
-    const reset = isGM && result ? `<button type="button" class="srr-reset" data-action="srrReset"
+    const reset = isGM && result && (request.type !== "passive") ? `<button type="button" class="srr-reset" data-action="srrReset"
       data-entry-id="${esc(entry.id)}" data-tooltip="${esc(t("SRR.Card.reset"))}"
       aria-label="${esc(t("SRR.Card.reset"))}"><i class="fa-solid fa-rotate-left" inert></i></button>` : "";
+    const chosen = result?.choice ? `<small>${esc(describeChoice(request, result.choice))}</small>` : "";
+    const choices = rollable && request.choices?.length ? choiceButtons(request, "srrRoll", entry) : "";
     return `<li class="srr-entry is-${state}" data-entry-id="${esc(entry.id)}">
       <img class="srr-entry-img" src="${esc(entry.img || "icons/svg/mystery-man.svg")}" alt="">
-      <span class="srr-entry-name">${esc(entry.name)}</span>
-      <span class="srr-entry-result">${resultCell(request, entry, view, rollable)}</span>${reset}</li>`;
+      <span class="srr-entry-name">${esc(entry.name)}${chosen}</span>
+      <span class="srr-entry-result">${resultCell(request, entry, view, rollable)}</span>${reset}${choices}</li>`;
   }).join("");
 
   let foot;
@@ -188,7 +206,7 @@ async function onCardClick(event, message) {
         if ( !entry ) return;
         // The GM skips the dialog unless Shift says otherwise, players get the system's usual behavior
         const fastForward = game.user.isGM ? (gmFastForward() !== event.shiftKey) : false;
-        await rollEntry(card, entry, {event: game.user.isGM ? null : event, fastForward});
+        await rollEntry(card, entry, {event: game.user.isGM ? null : event, fastForward, choice: button.dataset.choice ?? null});
         break;
       }
       case "srrReset":

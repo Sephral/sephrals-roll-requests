@@ -3,8 +3,17 @@
  * against the DC, what each viewer may see, and the summary of a card. Everything here is pure and has unit tests.
  */
 
-/** How the results show: public, for the GM only, or blind (the roller does not see the own result either). */
-export const MODES = ["public", "gm", "blind"];
+/**
+ * How the results show: public, for the GM only, blind (the roller does not see the own result either), or silent
+ * (the GM rolls for everyone and the players hear nothing of it).
+ */
+export const MODES = ["public", "gm", "blind", "silent"];
+
+/** When a group check succeeds: at least half of the group succeed, all of them, or one is enough. */
+export const GROUP_RULES = ["half", "all", "any"];
+
+/** Roll types the players can get to choose between. */
+export const CHOOSABLE = ["save", "check", "skill", "tool", "attribute"];
 
 /** The advantage hint of a request. */
 export const ADVANTAGE = ["normal", "advantage", "disadvantage"];
@@ -38,18 +47,22 @@ export function parseDc(value) {
  * @param {boolean} [input.showDc=true]
  * @param {string} [input.mode="public"]
  * @param {string} [input.advantage="normal"]
- * @param {boolean} [input.group=false]
+ * @param {boolean|string} [input.group=false]     true or a rule of GROUP_RULES
+ * @param {string} [input.groupRule="half"]
+ * @param {{type: string, key: string}[]} [input.choices]   Two or more rolls, each character rolls one of them
  * @param {boolean} [input.autoRollNpcs=true]
  * @param {string} [input.note]
  * @returns {object}
  */
 export function normalizeOptions(input={}) {
-  const type = String(input.type ?? "").trim();
+  const choices = normalizeChoices(input.choices);
+  const type = choices.length ? choices[0].type : String(input.type ?? "").trim();
   if ( !type ) throw new Error("SRR.Error.noType");
-  const key = String(input.key ?? "").trim();
+  const key = choices.length ? choices[0].key : String(input.key ?? "").trim();
   const formula = String(input.formula ?? "").trim();
   if ( (type === "formula") && !formula ) throw new Error("SRR.Error.noFormula");
   if ( (type !== "formula") && !key ) throw new Error("SRR.Error.noKey");
+  const rule = GROUP_RULES.find(r => (r === input.group) || (r === input.groupRule)) ?? "half";
   return {
     type,
     key: type === "formula" ? "" : key,
@@ -57,12 +70,67 @@ export function normalizeOptions(input={}) {
     label: String(input.label ?? "").trim().slice(0, 80),
     dc: parseDc(input.dc),
     showDc: input.showDc !== false,
-    mode: MODES.includes(input.mode) ? input.mode : "public",
-    advantage: ADVANTAGE.includes(input.advantage) ? input.advantage : "normal",
+    // A passive value is no roll: only the GM gets to see the comparison
+    mode: type === "passive" ? "silent" : MODES.includes(input.mode) ? input.mode : "public",
+    // A passive value is no roll and a hit die knows no advantage
+    advantage: ((type === "passive") || (key === "hitDie")) ? "normal"
+      : ADVANTAGE.includes(input.advantage) ? input.advantage : "normal",
     group: !!input.group,
+    groupRule: rule,
     autoRollNpcs: input.autoRollNpcs !== false,
-    note: String(input.note ?? "").trim().slice(0, NOTE_LENGTH)
+    note: String(input.note ?? "").trim().slice(0, NOTE_LENGTH),
+    choices
   };
+}
+
+/**
+ * The rolls of a request that lets each character pick one. Fewer than two different rolls are no choice.
+ * @param {*} list
+ * @returns {{type: string, key: string}[]}
+ */
+export function normalizeChoices(list) {
+  if ( !Array.isArray(list) ) return [];
+  const seen = new Map();
+  for ( const item of list ) {
+    const type = String(item?.type ?? "").trim();
+    const key = String(item?.key ?? "").trim();
+    if ( CHOOSABLE.includes(type) && key ) seen.set(rollId(type, key), {type, key});
+  }
+  return seen.size > 1 ? [...seen.values()] : [];
+}
+
+/**
+ * The id of a roll, as the request window and the marks of a roll use it.
+ * @param {string} type
+ * @param {string} [key]
+ * @returns {string}
+ */
+export function rollId(type, key="") {
+  return `${type}:${key}`;
+}
+
+/**
+ * The type and key of a roll id.
+ * @param {string} id
+ * @returns {{type: string, key: string}}
+ */
+export function parseRollId(id) {
+  const [type, ...rest] = String(id ?? "").split(":");
+  return {type, key: rest.join(":")};
+}
+
+/**
+ * The roll a character makes: the one of the given id when the request offers it, otherwise the first.
+ * @param {object} request
+ * @param {string|null} [id]
+ * @returns {{type: string, key: string}}
+ */
+export function pickChoice(request, id=null) {
+  const choices = request?.choices ?? [];
+  if ( !choices.length ) return {type: request?.type, key: request?.key};
+  const wanted = id ? parseRollId(id) : null;
+  const choice = choices.find(c => (c.type === wanted?.type) && (c.key === wanted?.key)) ?? choices[0];
+  return {type: choice.type, key: choice.key};
 }
 
 /**
@@ -137,13 +205,17 @@ export function judge({total, natural=null}, dc, scheme="d20", {critfail=false, 
 /* -------------------------------------------- */
 
 /**
- * Whether a group check succeeds: at least half of the group succeed (the D&D rule).
+ * Whether a group check succeeds. The default is the D&D rule: at least half of the group succeed.
  * @param {number} passed
  * @param {number} count
+ * @param {string} [rule="half"]
  * @returns {boolean}
  */
-export function groupSucceeds(passed, count) {
-  return count > 0 && (passed * 2 >= count);
+export function groupSucceeds(passed, count, rule="half") {
+  if ( count <= 0 ) return false;
+  if ( rule === "all" ) return passed === count;
+  if ( rule === "any" ) return passed > 0;
+  return passed * 2 >= count;
 }
 
 /**
@@ -168,7 +240,7 @@ export function summarize(request) {
   const count = entries.length;
   const complete = count > 0 && rolled === count;
   const judged = (request?.dc !== null && request?.dc !== undefined) || (passed + failed > 0);
-  const group = (request?.group && complete && judged) ? (groupSucceeds(passed, count) ? "success" : "failure") : null;
+  const group = (request?.group && complete && judged) ? (groupSucceeds(passed, count, request.groupRule) ? "success" : "failure") : null;
   return {count, rolled, pending: count - rolled, passed, failed, complete, group};
 }
 
@@ -176,7 +248,7 @@ export function summarize(request) {
  * What one viewer may see of a card.
  * - The GM sees everything.
  * - Players see totals in public requests; in GM-only requests only the totals of their own characters; in blind
- *   requests no totals at all. Outcomes and the summary of passes only show with a visible DC.
+ *   and silent requests no totals at all. Outcomes and the summary of passes only show with a visible DC.
  * @param {object} request
  * @param {object} viewer
  * @param {boolean} viewer.isGM
@@ -198,19 +270,20 @@ export function viewFor(request, {isGM, owns}) {
 }
 
 /**
- * The visibility of a roll message of a request: public, whispered to the GMs, or blind.
+ * The visibility of a roll message of a request: public, whispered to the GMs (also for silent requests), or blind.
  * @param {string} mode
  * @param {string[]} gms   Ids of the GM users
  * @returns {{whisper: string[], blind: boolean}}
  */
 export function rollVisibility(mode, gms) {
-  if ( mode === "gm" ) return {whisper: [...gms], blind: false};
+  if ( (mode === "gm") || (mode === "silent") ) return {whisper: [...gms], blind: false};
   if ( mode === "blind" ) return {whisper: [...gms], blind: true};
   return {whisper: [], blind: false};
 }
 
 /**
- * Who receives the card: everybody for public requests, otherwise the GMs and the players asked to roll.
+ * Who receives the card: everybody for public requests, only the GMs for silent ones, otherwise the GMs and the
+ * players asked to roll.
  * @param {string} mode
  * @param {string[]} gms
  * @param {string[]} players
@@ -218,6 +291,7 @@ export function rollVisibility(mode, gms) {
  */
 export function cardRecipients(mode, gms, players) {
   if ( mode === "public" ) return [];
+  if ( mode === "silent" ) return [...gms];
   return [...new Set([...gms, ...players])];
 }
 
@@ -248,6 +322,8 @@ export function publicResult(request, messageId) {
     label: request.label,
     dc: request.dc,
     mode: request.mode,
+    choices: request.choices ?? [],
+    groupRule: request.groupRule ?? "half",
     group: summary.group,
     complete: summary.complete,
     passed: summary.passed,

@@ -13,7 +13,7 @@ import {firstTotal, loc, rollFormula, sortByLabel} from "./common.mjs";
  */
 export function crucibleGroups(skills) {
   const options = Object.entries(skills ?? {}).map(([key, s]) => ({key, label: loc(s?.label ?? key)}));
-  return [{type: "skill", options: sortByLabel(options)}].filter(group => group.options.length);
+  return [{type: "skill", icon: "fa-star", cols: 3, options: sortByLabel(options)}].filter(group => group.options.length);
 }
 
 /**
@@ -36,6 +36,12 @@ export const crucible = {
   scheme: "crucible",
   advantage: false,
   defaultDc: null,
+  dcChips: [12, 15, 18, 21, 24, 27],
+
+  /** @returns {Actor[]} */
+  party() {
+    return [...(globalThis.crucible?.party?.system?.actors ?? [])];
+  },
 
   /** @returns {object[]} */
   groups() {

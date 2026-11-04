@@ -41,33 +41,104 @@
     },
     "Request": {
       "title": "Würfe anfordern",
-      "who": "Wer würfelt",
-      "selected": "Ausgewählte Tokens",
-      "characters": "Spielercharaktere",
+      "filter": "Würfe filtern",
+      "noRoll": "Kein Wurf gefunden.",
       "none": "Keine",
-      "noCandidates": "Wähle Tokens auf der Karte aus oder zieh Akteure hierher.",
-      "dropHint": "Zieh Akteure aus der Seitenleiste oder Tokens hierher, um sie hinzuzufügen.",
-      "fromToken": "Nur dieser Token",
       "npc": "Kein Spieler",
       "remove": "Entfernen",
-      "what": "Was",
-      "roll": "Wurf",
+      "offline": "offline",
+      "offlineShort": "off",
+      "drop": "Akteur hierher",
+      "dropHint": "Zieh Akteure aus der Seitenleiste oder Tokens hierher, um sie hinzuzufügen.",
       "formula": "Formel",
       "label": "Name",
-      "labelHint": "Steht auf der Karte",
+      "labelHint": "Name auf der Karte",
       "dc": "SG",
-      "tn": "Mindestwurf",
+      "tn": "MW",
       "noDc": "keiner",
-      "showDc": "Spieler sehen den SG",
-      "advantage": "Hinweis",
-      "mode": "Ergebnisse",
+      "showDc": "Spieler sehen ihn",
+      "secret": {
+        "dc": "Geheimer SG",
+        "tn": "Geheimer MW"
+      },
+      "secretValue": {
+        "dc": "geheimer SG {dc}",
+        "tn": "geheimer MW {dc}"
+      },
+      "advantage": "Wurf",
+      "mode": "Ergebnis",
+      "group": "Gruppe",
       "note": "Notiz",
-      "noteHint": "Optional, steht auf der Karte",
-      "group": "Gruppenprobe: Die Gruppe schafft es, wenn mindestens die Hälfte es schafft",
+      "noteHint": "Notiz auf der Karte",
       "autoRollNpcs": "Für Charaktere ohne Spieler sofort würfeln",
-      "send": "Anfordern",
-      "cancel": "Abbrechen",
-      "noneSelected": "Es sind keine Tokens ausgewählt."
+      "autoRollShort": "NSCs würfeln sofort",
+      "noneSelected": "Es sind keine Tokens ausgewählt.",
+      "or": "oder",
+      "choiceHint": "Strg+Klick auf mehrere Würfe: Spieler wählen einen.",
+      "pickWho": "Wähle, wer würfelt",
+      "ask": {
+        "one": "{count} Charakter fragen: {what}",
+        "many": "{count} Charaktere fragen: {what}"
+      },
+      "silent": {
+        "one": "Still für {count} Charakter würfeln: {what}",
+        "many": "Still für {count} Charaktere würfeln: {what}"
+      },
+      "compare": {
+        "one": "{count} Charakter vergleichen: {what}",
+        "many": "{count} Charaktere vergleichen: {what}"
+      },
+      "presetSave": "Als Vorlage speichern",
+      "presetRemove": "Vorlage löschen"
+    },
+    "Section": {
+      "save": "Rettung",
+      "check": "Probe",
+      "skill": "Fertigkeit",
+      "tool": "Werkzeug",
+      "attribute": "Attribut",
+      "combat": "Kampf",
+      "passive": "Passiv",
+      "formula": "Formel"
+    },
+    "Roll": {
+      "initiative": "Initiative",
+      "death": "Todesrettung",
+      "concentration": "Konzentration",
+      "hitDie": "Trefferwürfel"
+    },
+    "ToolTab": {
+      "kits": "Kits",
+      "art": "Handwerk",
+      "game": "Spiele",
+      "music": "Musik"
+    },
+    "Scope": {
+      "scene": "Szene",
+      "party": "Gruppe",
+      "selected": "Ausgewählt",
+      "all": "Alle"
+    },
+    "Short": {
+      "normal": "Normal",
+      "advantage": "Vorteil",
+      "disadvantage": "Nachteil",
+      "fortune": "Glück",
+      "misfortune": "Pech",
+      "public": "Öffentlich",
+      "gm": "SL",
+      "blind": "Verdeckt",
+      "silent": "Still",
+      "off": "Aus",
+      "half": "Hälfte",
+      "all": "Alle",
+      "any": "Einer"
+    },
+    "GroupRule": {
+      "off": "Keine Gruppenprobe",
+      "half": "Die Gruppe schafft es, wenn mindestens die Hälfte es schafft",
+      "all": "Die Gruppe schafft es, wenn alle es schaffen",
+      "any": "Die Gruppe schafft es, wenn einer es schafft"
     },
     "Type": {
       "save": "Rettungswürfe",
@@ -75,22 +146,29 @@
       "skill": "Fertigkeiten",
       "tool": "Werkzeuge",
       "attribute": "Attribute",
-      "formula": "Eigene Formel"
+      "formula": "Eigene Formel",
+      "combat": "Kampf und Rast",
+      "passive": "Passive Werte"
     },
     "Label": {
       "save": "Rettungswurf: {name}",
       "check": "Probe: {name}",
       "skill": "{name}",
       "tool": "{name}",
-      "attribute": "{name}"
+      "attribute": "{name}",
+      "combat": "{name}",
+      "passive": "Passiv: {name}"
     },
     "Mode": {
       "public": "Öffentlich",
       "gm": "Nur SL",
       "blind": "Verdeckt",
-      "publicHint": "Alle sehen jeden Wurf und die Ergebnisse auf der Karte.",
-      "gmHint": "Spieler sehen ihre eigenen Würfe. Die übrigen Ergebnisse sind nur für dich.",
-      "blindHint": "Niemand außer dir sieht die Ergebnisse, auch nicht, wer gewürfelt hat."
+      "publicHint": "Alle sehen die Ergebnisse.",
+      "gmHint": "Spieler sehen nur ihre eigenen Würfe.",
+      "blindHint": "Nur du siehst die Ergebnisse.",
+      "silent": "Still",
+      "silentHint": "Du würfelst. Spieler bekommen nichts mit.",
+      "passiveHint": "Nur du siehst die Werte."
     },
     "Advantage": {
       "normal": "Keiner",
@@ -113,12 +191,16 @@
       "progress": "{rolled} von {count} gewürfelt",
       "passed": "{passed} von {count} geschafft",
       "allRolled": "Alle haben gewürfelt",
-      "groupCheck": "Gruppenprobe",
       "group": {
         "success": "Die Gruppe schafft es",
         "failure": "Die Gruppe scheitert"
       },
-      "rollRest": "Den Rest würfeln"
+      "rollRest": "Den Rest würfeln",
+      "groupRule": {
+        "half": "Gruppenprobe",
+        "all": "Gruppenprobe, alle müssen es schaffen",
+        "any": "Gruppenprobe, einer reicht"
+      }
     },
     "Outcome": {
       "success": "Erfolg",
@@ -140,7 +222,8 @@
       "gmOnly": "Nur eine SL kann Würfe anfordern.",
       "unknownChoice": "Diesen Wurf gibt es in diesem Spielsystem nicht.",
       "noActor": "Der Charakter {name} ist nicht zu finden.",
-      "rollFailed": "Der Wurf für {name} ist fehlgeschlagen, siehe Konsole."
+      "rollFailed": "Der Wurf für {name} ist fehlgeschlagen, siehe Konsole.",
+      "noRoll": "Von {name} kam kein Wurf. Das Spielsystem lässt ihn gerade nicht zu."
     },
     "SELFTEST": {
       "Title": "Selbsttest",

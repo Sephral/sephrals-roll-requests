@@ -27,7 +27,7 @@ Hooks.once("init", () => {
   });
   // Counted only on the active GM's client, like every Sephral module
   registerUsage(MODULE_ID, {
-    features: ["request", "groupCheck", "formula", "gmRoll"],
+    features: ["request", "groupCheck", "formula", "gmRoll", "silent", "passive", "choice", "preset"],
     settings: ["theme", "promptWindow", "promptSound", "gmFastForward"]
   });
   game.keybindings.register(MODULE_ID, "openRequest", {
@@ -61,7 +61,7 @@ Hooks.once("init", () => {
     if ( requestOf(message) ) refreshPrompt();
   });
   game.modules.get(MODULE_ID).api = {
-    /** Ask for rolls (GM): {actors, type, key, formula, label, dc, showDc, mode, advantage, group, autoRollNpcs, note}. */
+    /** Ask for rolls (GM): {actors, type, key, choices, formula, label, dc, showDc, mode, advantage, group, groupRule, autoRollNpcs, note}. */
     request: createRequest,
     /** Open the request window (GM), optionally with values and actors to start with. */
     openDialog: openRequestWindow,

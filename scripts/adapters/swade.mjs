@@ -15,6 +15,10 @@ export function swadeSlug(name) {
   return String(name ?? "").trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "");
 }
 
+/** Icons and colors of the attributes (Font Awesome, part of Foundry). */
+const ATTRIBUTE_LOOKS = {agility: ["fa-feather", "dex"], smarts: ["fa-lightbulb", "int"], spirit: ["fa-compass", "wis"],
+  strength: ["fa-dumbbell", "str"], vigor: ["fa-heart", "con"]};
+
 /**
  * The roll choices of SWADE.
  * @param {object} config        CONFIG.SWADE
@@ -23,7 +27,8 @@ export function swadeSlug(name) {
  * @returns {{type: string, options: {key: string, label: string}[]}[]}
  */
 export function swadeGroups(config, coreSkills, actors=[]) {
-  const attributes = Object.entries(config?.attributes ?? {}).map(([key, a]) => ({key, label: loc(a?.long ?? a)}));
+  const attributes = Object.entries(config?.attributes ?? {}).map(([key, a]) => ({key, label: loc(a?.long ?? a),
+    icon: ATTRIBUTE_LOOKS[key]?.[0] ?? null, tint: ATTRIBUTE_LOOKS[key]?.[1] ?? null}));
   const skills = new Map();
   for ( const name of String(coreSkills ?? "").split(",").map(s => s.trim()).filter(Boolean) ) {
     skills.set(swadeSlug(name), name);
@@ -38,8 +43,8 @@ export function swadeGroups(config, coreSkills, actors=[]) {
     }
   }
   return [
-    {type: "attribute", options: attributes},
-    {type: "skill", options: sortByLabel([...skills].map(([key, label]) => ({key, label})))}
+    {type: "attribute", icon: "fa-dice-d20", cols: 5, options: attributes},
+    {type: "skill", icon: "fa-star", cols: 3, options: sortByLabel([...skills].map(([key, label]) => ({key, label})))}
   ].filter(group => group.options.length);
 }
 
@@ -61,6 +66,9 @@ export const swade = {
   advantage: false,
   defaultDc: 4,
   dcName: "tn",
+  rollsOfActors: true,
+  dcChips: [4, 6, 8, 10, 12],
+  quick: ["skill:notice", "attribute:spirit", "attribute:vigor", "skill:stealth", "skill:persuasion"],
 
   /**
    * @param {Actor[]} [actors]

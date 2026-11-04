@@ -6,7 +6,7 @@
 import {addSettingsGear, esc, isShown, setting, t} from "./config.mjs";
 import {pendingFor} from "./request-model.mjs";
 import {canRoll, describe, openCards, requestOf} from "./requests.mjs";
-import {advantageLabel, metaLine} from "./card.mjs";
+import {advantageLabel, choiceButtons, metaLine} from "./card.mjs";
 import {rollEntry} from "./rolling.mjs";
 
 const {ApplicationV2} = foundry.applications.api;
@@ -35,7 +35,8 @@ export class RollPrompt extends ApplicationV2 {
    */
   static items() {
     if ( game.user.isGM ) return [];
-    return openCards().map(card => {
+    // Every client holds whispered cards too, a silent request must not show here
+    return openCards().filter(card => card.visible).map(card => {
       const request = requestOf(card);
       return {card, request, entries: pendingFor(request, entry => canRoll(entry))};
     }).filter(item => item.entries.length);
@@ -55,8 +56,9 @@ export class RollPrompt extends ApplicationV2 {
       const rows = entries.map(entry => `<li class="srr-entry is-pending">
         <img class="srr-entry-img" src="${esc(entry.img || "icons/svg/mystery-man.svg")}" alt="">
         <span class="srr-entry-name">${esc(entry.name)}</span>
-        <button type="button" class="srr-roll" data-action="srrPromptRoll" data-card-id="${esc(card.id)}"
-          data-entry-id="${esc(entry.id)}"><i class="fa-solid fa-dice-d20" inert></i> ${esc(t("SRR.Card.roll"))}</button>
+        ${request.choices?.length ? choiceButtons(request, "srrPromptRoll", entry, ` data-card-id="${esc(card.id)}"`)
+          : `<button type="button" class="srr-roll" data-action="srrPromptRoll" data-card-id="${esc(card.id)}"
+          data-entry-id="${esc(entry.id)}"><i class="fa-solid fa-dice-d20" inert></i> ${esc(t("SRR.Card.roll"))}</button>`}
         </li>`).join("");
       return `<article class="srr-prompt-request">
         <header><strong>${esc(describe(request))}</strong>${meta ? `<span class="srr-card-meta">${esc(meta)}</span>` : ""}</header>
@@ -90,7 +92,7 @@ export class RollPrompt extends ApplicationV2 {
     if ( !card || !entry ) return;
     target.disabled = true;
     try {
-      await rollEntry(card, entry, {event});
+      await rollEntry(card, entry, {event, choice: target.dataset.choice ?? null});
     } finally {
       target.disabled = false;
     }

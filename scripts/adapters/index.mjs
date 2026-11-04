@@ -68,7 +68,7 @@ export function getAdapter(systemId=globalThis.game?.system?.id) {
 /**
  * The roll choices of the running system, with the formula at the end.
  * @param {Actor[]} [actors]   Actors whose own choices count (SWADE skills)
- * @returns {{type: string, options: {key: string, label: string}[]}[]}
+ * @returns {{type: string, icon?: string, cols?: number, tabs?: object[], options: {key: string, label: string}[]}[]}
  */
 export function rollGroups(actors=[]) {
   let groups = [];
@@ -77,7 +77,7 @@ export function rollGroups(actors=[]) {
   } catch(err) {
     console.warn("sephrals-roll-requests | The roll choices of the system could not be read", err);
   }
-  return [...groups, {type: "formula", options: [{key: "", label: ""}]}];
+  return [...groups, {type: "formula", icon: "fa-square-root-variable", options: [{key: "", label: ""}]}];
 }
 
 /**

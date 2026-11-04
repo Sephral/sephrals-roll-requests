@@ -41,33 +41,104 @@
     },
     "Request": {
       "title": "Request rolls",
-      "who": "Who rolls",
-      "selected": "Selected tokens",
-      "characters": "Player characters",
+      "filter": "Filter rolls",
+      "noRoll": "No roll found.",
       "none": "None",
-      "noCandidates": "Select tokens on the map or drag actors here.",
-      "dropHint": "Drag actors from the sidebar or tokens here to add them.",
-      "fromToken": "This token only",
       "npc": "No player",
       "remove": "Remove",
-      "what": "What",
-      "roll": "Roll",
+      "offline": "offline",
+      "offlineShort": "off",
+      "drop": "Drop actor",
+      "dropHint": "Drag actors from the sidebar or tokens here to add them.",
       "formula": "Formula",
       "label": "Name",
-      "labelHint": "Shown on the card",
+      "labelHint": "Name on the card",
       "dc": "DC",
-      "tn": "Target number",
+      "tn": "TN",
       "noDc": "none",
-      "showDc": "Players see the DC",
-      "advantage": "Hint",
+      "showDc": "Players see it",
+      "secret": {
+        "dc": "Secret DC",
+        "tn": "Secret TN"
+      },
+      "secretValue": {
+        "dc": "secret DC {dc}",
+        "tn": "secret TN {dc}"
+      },
+      "advantage": "Roll",
       "mode": "Results",
+      "group": "Group",
       "note": "Note",
-      "noteHint": "Optional, shown on the card",
-      "group": "Group check: the group succeeds when at least half succeed",
-      "autoRollNpcs": "Roll for characters without a player at once",
-      "send": "Request",
-      "cancel": "Cancel",
-      "noneSelected": "No tokens are selected."
+      "noteHint": "Note on the card",
+      "autoRollNpcs": "Characters without a player roll at once",
+      "autoRollShort": "NPCs roll at once",
+      "noneSelected": "No tokens are selected.",
+      "or": "or",
+      "choiceHint": "Ctrl+click several rolls: players pick one.",
+      "pickWho": "Pick who rolls",
+      "ask": {
+        "one": "Ask {count} character: {what}",
+        "many": "Ask {count} characters: {what}"
+      },
+      "silent": {
+        "one": "Roll silently for {count} character: {what}",
+        "many": "Roll silently for {count} characters: {what}"
+      },
+      "compare": {
+        "one": "Compare {count} character: {what}",
+        "many": "Compare {count} characters: {what}"
+      },
+      "presetSave": "Save as preset",
+      "presetRemove": "Delete preset"
+    },
+    "Section": {
+      "save": "Save",
+      "check": "Check",
+      "skill": "Skills",
+      "tool": "Tools",
+      "attribute": "Attributes",
+      "combat": "Combat",
+      "passive": "Passive",
+      "formula": "Formula"
+    },
+    "Roll": {
+      "initiative": "Initiative",
+      "death": "Death save",
+      "concentration": "Concentration",
+      "hitDie": "Hit die"
+    },
+    "ToolTab": {
+      "kits": "Kits",
+      "art": "Artisan",
+      "game": "Games",
+      "music": "Music"
+    },
+    "Scope": {
+      "scene": "Scene",
+      "party": "Party",
+      "selected": "Selected",
+      "all": "All"
+    },
+    "Short": {
+      "normal": "Normal",
+      "advantage": "Adv.",
+      "disadvantage": "Dis.",
+      "fortune": "Fortune",
+      "misfortune": "Misfortune",
+      "public": "Public",
+      "gm": "GM",
+      "blind": "Blind",
+      "silent": "Silent",
+      "off": "Off",
+      "half": "Half",
+      "all": "All",
+      "any": "One"
+    },
+    "GroupRule": {
+      "off": "No group check",
+      "half": "The group succeeds when at least half succeed",
+      "all": "The group succeeds when everyone succeeds",
+      "any": "The group succeeds when one succeeds"
     },
     "Type": {
       "save": "Saving throws",
@@ -75,22 +146,29 @@
       "skill": "Skills",
       "tool": "Tools",
       "attribute": "Attributes",
-      "formula": "Own formula"
+      "formula": "Own formula",
+      "combat": "Combat and rest",
+      "passive": "Passive values"
     },
     "Label": {
       "save": "{name} saving throw",
       "check": "{name} check",
       "skill": "{name}",
       "tool": "{name}",
-      "attribute": "{name}"
+      "attribute": "{name}",
+      "combat": "{name}",
+      "passive": "Passive {name}"
     },
     "Mode": {
       "public": "Public",
       "gm": "GM only",
       "blind": "Blind",
-      "publicHint": "Everyone sees every roll and the results on the card.",
-      "gmHint": "Players see their own rolls. The other results are only for you.",
-      "blindHint": "Nobody but you sees the results, not even the player who rolled."
+      "publicHint": "Everyone sees the results.",
+      "gmHint": "Players see only their own rolls.",
+      "blindHint": "Nobody but you sees the results.",
+      "silent": "Silent",
+      "silentHint": "You roll. Players see nothing.",
+      "passiveHint": "Only you see the values."
     },
     "Advantage": {
       "normal": "None",
@@ -113,12 +191,16 @@
       "progress": "{rolled} of {count} rolled",
       "passed": "{passed} of {count} passed",
       "allRolled": "Everyone has rolled",
-      "groupCheck": "Group check",
       "group": {
         "success": "The group succeeds",
         "failure": "The group fails"
       },
-      "rollRest": "Roll the rest"
+      "rollRest": "Roll the rest",
+      "groupRule": {
+        "half": "Group check",
+        "all": "Group check, everyone must pass",
+        "any": "Group check, one is enough"
+      }
     },
     "Outcome": {
       "success": "Success",
@@ -140,7 +222,8 @@
       "gmOnly": "Only a GM can request rolls.",
       "unknownChoice": "This roll does not exist in this game system.",
       "noActor": "The character {name} cannot be found.",
-      "rollFailed": "The roll for {name} failed, see the console."
+      "rollFailed": "The roll for {name} failed, see the console.",
+      "noRoll": "No roll came from {name}. The game system does not allow it right now."
     },
     "SELFTEST": {
       "Title": "Self test",

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {buildRequest, cardRecipients, groupSucceeds, judge, normalizeOptions, parseDc, pendingFor, publicResult,
-  rollVisibility, summarize, viewFor, takeReplaced, pickMarker} from "../scripts/request-model.mjs";
+import {buildRequest, cardRecipients, groupSucceeds, judge, normalizeChoices, normalizeOptions, parseDc, parseRollId, pendingFor,
+  pickChoice, publicResult, rollId, rollVisibility, summarize, viewFor, takeReplaced, pickMarker} from "../scripts/request-model.mjs";
 
 const entries = [
   {id: "a", actorUuid: "Actor.a", name: "Ayla", npc: false},
@@ -26,7 +26,7 @@ test("a DC is a whole number from 0 to 999 or none", () => {
 test("options get their defaults", () => {
   const options = normalizeOptions({type: "skill", key: "prc"});
   assert.deepEqual(options, {type: "skill", key: "prc", formula: "", label: "", dc: null, showDc: true, mode: "public",
-    advantage: "normal", group: false, autoRollNpcs: true, note: ""});
+    advantage: "normal", group: false, groupRule: "half", autoRollNpcs: true, note: "", choices: []});
 });
 
 test("options keep valid choices and drop invalid ones", () => {
@@ -186,4 +186,63 @@ test("two open requests of one character: the roll goes to the request of its ki
   assert.equal(pickMarker([save, skill], kindOf({type: "save", key: "dex"})), save);
   assert.equal(pickMarker([save, skill], () => null), save, "unknown kind: the first open roll");
   assert.equal(pickMarker([save, skill], m => (m === skill ? null : false)), skill, "a request that does not contradict wins");
+});
+
+test("a silent request stays with the GMs", () => {
+  assert.equal(normalizeOptions({type: "skill", key: "prc", mode: "silent"}).mode, "silent");
+  assert.deepEqual(rollVisibility("silent", ["gm1"]), {whisper: ["gm1"], blind: false});
+  assert.deepEqual(cardRecipients("silent", ["gm1"], ["p1"]), ["gm1"]);
+  const view = viewFor(request({mode: "silent"}), {isGM: false, owns: () => true});
+  assert.equal(view.entry({}).total, false);
+});
+
+test("a passive value needs no roll and only the GM sees it", () => {
+  const options = normalizeOptions({type: "passive", key: "prc", mode: "public", advantage: "advantage"});
+  assert.equal(options.mode, "silent");
+  assert.equal(options.advantage, "normal");
+  assert.equal(normalizeOptions({type: "combat", key: "hitDie", advantage: "advantage"}).advantage, "normal");
+  assert.equal(normalizeOptions({type: "combat", key: "death", advantage: "advantage"}).advantage, "advantage");
+});
+
+test("group rules", () => {
+  assert.equal(groupSucceeds(2, 4), true);
+  assert.equal(groupSucceeds(1, 4), false);
+  assert.equal(groupSucceeds(3, 4, "all"), false);
+  assert.equal(groupSucceeds(4, 4, "all"), true);
+  assert.equal(groupSucceeds(1, 4, "any"), true);
+  assert.equal(groupSucceeds(0, 4, "any"), false);
+  assert.equal(normalizeOptions({type: "skill", key: "prc", group: "all"}).groupRule, "all");
+  assert.equal(normalizeOptions({type: "skill", key: "prc", group: true}).groupRule, "half");
+  assert.equal(normalizeOptions({type: "skill", key: "prc", group: true, groupRule: "any"}).groupRule, "any");
+  assert.equal(normalizeOptions({type: "skill", key: "prc", group: "all"}).group, true);
+  const failed = request({group: "all"});
+  failed.results = Object.fromEntries(failed.entries.map((e, i) => [e.id, {success: i === 0}]));
+  assert.equal(summarize(failed).group, failed.entries.length > 1 ? "failure" : "success");
+});
+
+test("a choice needs two different rolls of a kind players can pick", () => {
+  const list = [{type: "skill", key: "ath"}, {type: "skill", key: "acr"}];
+  assert.deepEqual(normalizeChoices(list), list);
+  assert.deepEqual(normalizeChoices([list[0], list[0]]), []);
+  assert.deepEqual(normalizeChoices([list[0], {type: "formula", key: "x"}]), []);
+  assert.deepEqual(normalizeChoices(null), []);
+  const options = normalizeOptions({choices: list});
+  assert.equal(options.type, "skill");
+  assert.equal(options.key, "ath");
+  assert.equal(options.choices.length, 2);
+});
+
+test("the roll of a choice", () => {
+  const choices = [{type: "skill", key: "ath"}, {type: "save", key: "dex"}];
+  assert.deepEqual(pickChoice({type: "skill", key: "ath", choices}, "save:dex"), {type: "save", key: "dex"});
+  assert.deepEqual(pickChoice({type: "skill", key: "ath", choices}, "save:con"), {type: "skill", key: "ath"});
+  assert.deepEqual(pickChoice({type: "skill", key: "ath", choices}), {type: "skill", key: "ath"});
+  assert.deepEqual(pickChoice({type: "check", key: "str", choices: []}, "save:dex"), {type: "check", key: "str"});
+});
+
+test("roll ids", () => {
+  assert.equal(rollId("skill", "prc"), "skill:prc");
+  assert.deepEqual(parseRollId("skill:prc"), {type: "skill", key: "prc"});
+  assert.deepEqual(parseRollId("formula:"), {type: "formula", key: ""});
+  assert.deepEqual(parseRollId("skill:a:b"), {type: "skill", key: "a:b"});
 });

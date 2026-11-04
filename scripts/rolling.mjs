@@ -8,8 +8,8 @@
 import {getAdapter} from "./adapters/index.mjs";
 import {MODULE_ID, gmIds, setting, t} from "./config.mjs";
 import {debugTrace} from "./debug.mjs";
-import {pickMarker, rollVisibility, takeReplaced} from "./request-model.mjs";
-import {canRoll, entryActor, entryToken, requestOf} from "./requests.mjs";
+import {pickChoice, pickMarker, rollId, rollVisibility, takeReplaced} from "./request-model.mjs";
+import {canRoll, entryActor, entryToken, recordSilent, requestOf} from "./requests.mjs";
 import {countFeature} from "./usage.mjs";
 
 /** Rolls this client is waiting for: {cardId, requestId, entryId, actorUuid, mode, until}. */
@@ -34,9 +34,10 @@ const WAIT_MS = 10 * 60 * 1000;
  * @param {object} [options]
  * @param {Event|null} [options.event]       The click, for the system's keys
  * @param {boolean} [options.fastForward]    Skip the system's dialog
+ * @param {string|null} [options.choice]     Which roll of a choice, by its id (the first without one)
  * @returns {Promise<boolean>}   Whether a roll was started
  */
-export async function rollEntry(card, entry, {event=null, fastForward=false}={}) {
+export async function rollEntry(card, entry, {event=null, fastForward=false, choice=null}={}) {
   const request = requestOf(card);
   if ( !request || request.results?.[entry.id] ) return false;
   const actor = entryActor(entry);
@@ -44,13 +45,19 @@ export async function rollEntry(card, entry, {event=null, fastForward=false}={})
     ui.notifications.warn(t("SRR.Error.noActor", {name: entry.name}));
     return false;
   }
-  if ( !canRoll(entry) ) return false;
+  if ( !canRoll(entry) || ((request.mode === "silent") && !game.user.isGM) ) return false;
+  const roll = pickChoice(request, choice);
   const marker = {cardId: card.id, requestId: request.id, entryId: entry.id, actorUuid: actor.uuid, mode: request.mode,
-    system: request.system, type: request.type, key: request.key, until: Date.now() + WAIT_MS};
+    system: request.system, type: roll.type, key: roll.key, until: Date.now() + WAIT_MS,
+    choice: request.choices?.length ? rollId(roll.type, roll.key) : null};
   pending.push(marker);
   debugTrace.add("roll started", {messageId: card.id, entryId: entry.id, fastForward});
   try {
-    await getAdapter(request.system).roll(actor, request, {event, fastForward, token: entryToken(entry)});
+    const made = await getAdapter(request.system).roll(actor, {...request, ...roll}, {event, fastForward, token: entryToken(entry)});
+    if ( (made === false) || (fastForward && await noMessageCame(marker)) ) {
+      ui.notifications.warn(t("SRR.Error.noRoll", {name: entry.name}));
+      return false;
+    }
     // Only the active GM's browser counts, so this is the GM rolling for a character
     if ( game.user.isGM ) countFeature(MODULE_ID, "gmRoll");
     return true;
@@ -62,6 +69,18 @@ export async function rollEntry(card, entry, {event=null, fastForward=false}={})
     // The message is created inside the roll; a short grace keeps a late one from going unmarked
     setTimeout(() => removeMarker(marker), 1500);
   }
+}
+
+/**
+ * Whether a roll without a dialog ended without a roll message. A system can refuse a roll, like a death save above
+ * 0 hit points. With a dialog the same silence just means that the player cancelled.
+ * @param {object} marker
+ * @returns {Promise<boolean>}
+ */
+async function noMessageCame(marker) {
+  if ( !pending.includes(marker) ) return false;
+  await new Promise(resolve => setTimeout(resolve, 300));
+  return pending.includes(marker);
 }
 
 /**
@@ -146,11 +165,13 @@ export function onDeleteChatMessage(message, options, userId) {
 }
 
 /**
- * Hook "preCreateChatMessage" on the rolling client: mark the roll message and give it the request's visibility.
+ * Hook "preCreateChatMessage" on the rolling client: mark the roll message and give it the request's visibility. The
+ * roll of a silent request stops here: its result goes straight to the card, so no message reaches the players.
  * @param {ChatMessage} message
  * @param {object} data
  * @param {object} options
  * @param {string} userId
+ * @returns {boolean|void}   False when the message must not be created
  */
 export function onPreCreateChatMessage(message, data, options, userId) {
   if ( userId !== game.user.id ) return;
@@ -172,8 +193,16 @@ export function onPreCreateChatMessage(message, data, options, userId) {
   if ( !pending.length ) return;
   const marker = markerFor(message);
   if ( !marker ) return;
+  // A silent roll swallows its message, so it must be sure that this message is the roll it waits for
+  if ( (marker.mode === "silent") && (getAdapter(marker.system).matches?.(message, marker) === false) ) return;
   removeMarker(marker);
   const answer = {cardId: marker.cardId, requestId: marker.requestId, entryId: marker.entryId};
+  if ( marker.choice ) answer.choice = marker.choice;
+  if ( marker.mode === "silent" ) {
+    debugTrace.add("silent roll", {messageId: marker.cardId, entryId: marker.entryId});
+    recordSilent(message, answer);
+    return false;
+  }
   message.updateSource({flags: {[MODULE_ID]: {answer}}, ...rollVisibility(marker.mode, gmIds())});
   debugTrace.add("roll marked", {messageId: marker.cardId, entryId: marker.entryId, mode: marker.mode});
 }

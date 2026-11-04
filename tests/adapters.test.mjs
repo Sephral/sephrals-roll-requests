@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {firstTotal, naturalD20, rollsOf, sortByLabel} from "../scripts/adapters/common.mjs";
 import {crucible, crucibleGroups, crucibleRollArgs} from "../scripts/adapters/crucible.mjs";
-import {dnd5e, dnd5eGroups, dnd5eRollArgs, dnd5eRollKind} from "../scripts/adapters/dnd5e.mjs";
+import {dnd5e, dnd5eGroups, dnd5eMessage, dnd5eRollArgs, dnd5eRollKind} from "../scripts/adapters/dnd5e.mjs";
 import {ADAPTERS, generic, getAdapter} from "../scripts/adapters/index.mjs";
 import {pf2e, pf2eGroups, pf2eRollArgs} from "../scripts/adapters/pf2e.mjs";
 import {findSkill, swade, swadeGroups, swadeSlug} from "../scripts/adapters/swade.mjs";
@@ -38,9 +38,13 @@ test("D&D 5e offers saves, checks, skills and tools", () => {
     tools: {thief: {}, herb: {}}
   };
   const groups = dnd5eGroups(config, key => ({thief: "Thieves' Tools", herb: "Herbalism Kit"})[key]);
-  assert.deepEqual(groups.map(g => g.type), ["save", "check", "skill", "tool"]);
+  assert.deepEqual(groups.map(g => g.type), ["save", "check", "skill", "combat", "passive", "tool"]);
   assert.deepEqual(groups[2].options.map(o => o.key), ["ath", "prc"]);
-  assert.deepEqual(groups[3].options.map(o => o.label), ["Herbalism Kit", "Thieves' Tools"]);
+  assert.deepEqual(groups.at(-1).options.map(o => o.label), ["Herbalism Kit", "Thieves' Tools"]);
+  assert.deepEqual(groups[3].options.map(o => o.key), ["initiative", "death", "concentration", "hitDie"]);
+  assert.deepEqual(groups[4].options.map(o => o.key), ["prc"]);
+  assert.deepEqual(groups.at(-1).options.map(o => o.tab), ["kits", "kits"]);
+  assert.ok(groups[2].options.every(o => o.icon));
   assert.deepEqual(dnd5eGroups({abilities: {}}, k => k), []);
 });
 
@@ -56,6 +60,73 @@ test("D&D 5e rolls pass the DC only when the players may see it", () => {
   assert.deepEqual(hiddenDialog, {});
   assert.equal(dnd5eRollArgs({type: "skill", key: "prc", dc: null})[0].skill, "prc");
   assert.equal(dnd5eRollArgs({type: "tool", key: "thief", dc: null})[0].tool, "thief");
+});
+
+test("D&D 5e rolls initiative, death saves, concentration and hit dice", async () => {
+  const calls = [];
+  const called = name => async (...args) => {
+    calls.push([name, ...args]);
+    return {};
+  };
+  const actor = {system: {attributes: {hd: {value: 2}}}, rollInitiative: called("rollInitiative"), rollInitiativeDialog: called("rollInitiativeDialog"),
+    rollDeathSave: called("rollDeathSave"), rollConcentration: called("rollConcentration"), rollHitDie: called("rollHitDie")};
+  const request = key => ({type: "combat", key, dc: 12, showDc: true, advantage: "advantage", mode: "gm"});
+  await dnd5e.roll(actor, request("initiative"), {fastForward: true});
+  assert.deepEqual(calls.at(-1)[1], {createCombatants: true, rerollInitiative: true});
+  assert.equal(calls.at(-1)[2].advantage, true);
+  await dnd5e.roll(actor, request("initiative"));
+  assert.equal(calls.at(-1)[0], "rollInitiativeDialog");
+  await dnd5e.roll(actor, request("death"), {fastForward: true});
+  assert.deepEqual([calls.at(-1)[0], calls.at(-1)[1].target, calls.at(-1)[2].configure], ["rollDeathSave", 12, false]);
+  await dnd5e.roll(actor, {...request("concentration"), showDc: false});
+  assert.deepEqual(calls.at(-1)[1], {advantage: true});
+  await dnd5e.roll(actor, request("hitDie"));
+  assert.equal(calls.at(-1)[0], "rollHitDie");
+  actor.system.attributes.hd.value = 0;
+  assert.equal(await dnd5e.roll(actor, request("hitDie")), false);
+  await assert.rejects(dnd5e.roll(actor, request("nothing")));
+});
+
+test("D&D 5e gets the visibility of a request from the start", () => {
+  const generation = (value, run) => {
+    globalThis.game = {release: {generation: value}};
+    try {
+      run();
+    } finally {
+      delete globalThis.game;
+    }
+  };
+  assert.deepEqual(dnd5eMessage({}), {create: true});
+  generation(13, () => {
+    assert.equal(dnd5eMessage({mode: "gm"}).rollMode, "gmroll");
+    assert.equal(dnd5eMessage({mode: "silent"}).rollMode, "gmroll");
+    assert.equal(dnd5eMessage({mode: "blind"}).rollMode, "blindroll");
+  });
+  generation(14, () => {
+    assert.equal(dnd5eMessage({mode: "public"}).rollMode, "public");
+    assert.equal(dnd5eMessage({mode: "silent"}).rollMode, "gm");
+    assert.equal(dnd5eRollArgs({type: "save", key: "dex", dc: null, mode: "blind"})[2].rollMode, "blind");
+  });
+});
+
+test("D&D 5e tells an attack from the roll a request waits for", () => {
+  const request = {type: "skill", key: "prc"};
+  assert.equal(dnd5e.matches({flags: {dnd5e: {roll: {type: "attack"}}}}, request), false);
+  assert.equal(dnd5e.matches({flags: {dnd5e: {roll: {type: "skill", skillId: "prc"}}}}, request), true);
+  assert.equal(dnd5e.matches({flags: {}}, request), null);
+});
+
+test("a death save counts against 10 without a DC of the request", () => {
+  const roll = {total: 9, dice: [{faces: 20, results: [{result: 9, active: true}]}]};
+  assert.equal(dnd5e.evaluate({rolls: [roll]}, {type: "combat", key: "death", dc: null}).success, false);
+  assert.equal(dnd5e.evaluate({rolls: [roll]}, {type: "combat", key: "initiative", dc: null}).success, null);
+});
+
+test("D&D 5e reads passive values", () => {
+  const actor = {system: {skills: {prc: {passive: 14}}}};
+  assert.equal(dnd5e.passive(actor, "prc"), 14);
+  assert.equal(dnd5e.passive(actor, "ins"), null);
+  assert.equal(dnd5e.passive(null, "prc"), null);
 });
 
 test("D&D 5e calls the actor's roll method and judges the message", async () => {

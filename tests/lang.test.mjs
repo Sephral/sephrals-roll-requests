@@ -59,17 +59,36 @@ test("every key used by scripts exists", async () => {
     used.add(`SRR.SETTINGS.${key}.hint`);
   }
   // Keys built from parts
-  for ( const type of ["save", "check", "skill", "tool", "attribute", "formula"] ) used.add(`SRR.Type.${type}`);
-  for ( const type of ["save", "check", "skill", "tool", "attribute"] ) used.add(`SRR.Label.${type}`);
-  for ( const mode of ["public", "gm", "blind"] ) {
+  for ( const type of ["save", "check", "skill", "tool", "attribute", "combat", "passive", "formula"] ) {
+    used.add(`SRR.Type.${type}`);
+    used.add(`SRR.Section.${type}`);
+  }
+  for ( const type of ["save", "check", "skill", "tool", "attribute", "combat", "passive"] ) used.add(`SRR.Label.${type}`);
+  for ( const mode of ["public", "gm", "blind", "silent"] ) {
     used.add(`SRR.Mode.${mode}`);
     used.add(`SRR.Mode.${mode}Hint`);
+    used.add(`SRR.Short.${mode}`);
+  }
+  for ( const rule of ["half", "all", "any"] ) used.add(`SRR.Card.groupRule.${rule}`);
+  for ( const rule of ["off", "half", "all", "any"] ) {
+    used.add(`SRR.GroupRule.${rule}`);
+    used.add(`SRR.Short.${rule}`);
+  }
+  for ( const key of ["normal", "advantage", "disadvantage", "fortune", "misfortune"] ) used.add(`SRR.Short.${key}`);
+  for ( const key of ["initiative", "death", "concentration", "hitDie"] ) used.add(`SRR.Roll.${key}`);
+  for ( const key of ["kits", "art", "game", "music"] ) used.add(`SRR.ToolTab.${key}`);
+  for ( const key of ["scene", "party", "selected", "all"] ) used.add(`SRR.Scope.${key}`);
+  for ( const kind of ["ask", "silent", "compare"] ) {
+    used.add(`SRR.Request.${kind}.one`);
+    used.add(`SRR.Request.${kind}.many`);
   }
   for ( const a of ["normal", "advantage", "disadvantage", "fortune", "misfortune"] ) used.add(`SRR.Advantage.${a}`);
   for ( const o of ["success", "failure", "criticalSuccess", "criticalFailure", "raises"] ) used.add(`SRR.Outcome.${o}`);
   for ( const name of ["dc", "tn"] ) {
     used.add(`SRR.Card.${name}`);
     used.add(`SRR.Request.${name}`);
+    used.add(`SRR.Request.secret.${name}`);
+    used.add(`SRR.Request.secretValue.${name}`);
   }
   for ( const g of ["success", "failure"] ) used.add(`SRR.Card.group.${g}`);
   for ( const key of used ) if ( key.endsWith(".") ) used.delete(key);

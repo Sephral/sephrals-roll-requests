@@ -6,20 +6,27 @@ Roll Requests lets the GM ask a group of characters for the same roll. Each requ
 
 ### Making a request
 
-Open the request window with the d20 in the token controls, with Alt+R, or from a macro. The window starts with the values of your last request.
+Open the request window with the d20 in the token controls, with Alt+R, or from a macro. Every roll of your game system is a button on the left, who rolls and how stand on the right, and the button at the bottom says what will happen.
+
+The window starts with your last roll. DC, advantage, results, group and note start fresh, so a secret request never carries over into the next one by accident.
 
 | Field | Does |
 | --- | --- |
-| Who rolls | Starts with the selected tokens, otherwise with all player characters. *Selected tokens* and *Player characters* fill the list again, *None* clears the checks. Drag actors from the sidebar or tokens onto the window to add them. A token that is not linked to its actor rolls as itself. |
-| Roll | The saving throws, ability checks, skills and tools of the game system, or *Own formula*. |
-| Formula, Name | Only for an own formula, for example `1d20 + @abilities.dex.mod`. The name is shown on the card. |
-| DC | Optional. In Savage Worlds it is the target number, 4 when you leave it empty. |
-| Players see the DC | Off keeps the DC on your side. Players then see no pass or fail either. |
-| Hint | Advantage or disadvantage in D&D 5e, fortune or misfortune in Pathfinder 2e. The roll starts with it, players can still change it in the roll dialog. |
-| Results | *Public*: everyone sees the rolls and the card. *GM only*: players see their own rolls, the other results are yours. *Blind*: nobody but the GM sees the results, not even the player who rolled. |
+| Filter | Type a few letters, such as `dex sav`, and only the matching rolls stay, the tools of all tabs included. Enter takes the first one and moves on to the DC, a second Enter sends the request. |
+| Quick rolls | Your saved presets and your last rolls, above the buttons. |
+| Roll buttons | The saving throws, ability checks, skills and tools of the game system. Their colors show the ability they belong to, the tools sit on tabs. Hold Ctrl or Shift and click a second roll to let each player pick one of them. |
+| Combat | D&D 5e: initiative, death save, concentration and hit die. Initiative needs a combat, the request starts one on the viewed scene if there is none. |
+| Passive | D&D 5e: passive Perception, Insight and Investigation. Nobody rolls, the card shows the values to you alone, so the choices for results and advantage do not apply. |
+| Formula, Name | An own formula, for example `1d20 + @abilities.dex.mod`. The name is shown on the card. |
+| Who rolls | *Scene* lists the player characters with a token on the viewed scene, *Party* the party of your game system or the characters assigned to your players, *Selected* the tokens selected on the map and it follows your selection, *All* every player character. Characters of players who are away are marked and not ticked. The last button clears the ticks. Drag actors from the sidebar or tokens onto the window to add them. |
+| DC | Optional, type it or take a button. In Savage Worlds it is the target number, 4 when you leave it empty. |
+| Players see it | Click to make it a secret DC. Players then see no pass or fail either. |
+| Roll | Advantage or disadvantage in D&D 5e, fortune or misfortune in Pathfinder 2e. The roll starts with it, players can still change it in the roll dialog. |
+| Results | *Public*: everyone sees the rolls and the card. *GM*: players see their own rolls, the other results are yours. *Blind*: nobody but the GM sees the results, not even the player who rolled. *Silent*: you roll for everyone at once, players get no prompt and no chat message, so they never learn that a roll was made. What a roll changes on the character stays visible: silent initiative stands in the combat tracker, death saves and hit dice change the sheet. |
+| Group | The card tells whether the group succeeds: when at least half succeed, when all succeed, or when one is enough. |
 | Note | Optional text on the card, such as “The bridge sways”. |
-| Group check | The card tells whether the group succeeds: at least half of the characters must succeed. |
-| Roll for characters without a player at once | NPCs and other characters no player owns roll right away, without a dialog. |
+| NPCs roll at once | NPCs and other characters no player owns roll right away, without a dialog. |
+| Bookmark | Saves the request without who rolls as a preset. The cross on a preset deletes it. |
 
 ### The card
 
@@ -27,6 +34,8 @@ The card lists every character with its result. As the GM you see every total, p
 
 * **Roll** next to a character rolls for it. Your rolls skip the system's roll dialog (setting *Your rolls skip the dialog*), Shift turns that around for one roll.
 * **Roll the rest** rolls for every character that has not rolled yet.
+* When players pick one of several rolls, each character gets a button per roll and the card shows which one was made. Your own rolls for the rest and rolls of NPCs take the first one.
+* Silent rolls and passive values stay on your card alone. A silent roll posts no chat message, so the card holds its total but not its dice.
 * **Roll again** (the arrow next to a result) takes the result back, so the character can roll once more.
 * A reroll with a hero point (Pathfinder 2e) or a benny (Savage Worlds) replaces the result of that character, when it comes from the same player or a GM. The reroll keeps the visibility of the request.
 * When two requests wait for the same character, each roll goes to the request that asked for that kind of roll.
@@ -80,7 +89,7 @@ The module can take part in a small usage report shared by all of Sephral’s mo
 With the GM’s consent only the active GM’s browser counts, and it sends at most one report a day. The counts are kept in a hidden world setting, so all browsers and computers of the GM count together, and turning the statistics off deletes them. A copy of a world gets its own world ID. The question lists everything the report contains, from the Foundry version to a random world ID. For Roll Requests it holds:
 
 * on how many of the last 30 days the module was used
-* how often the GM makes requests, group checks and requests with an own formula, and how often the GM rolls for a character
+* how often the GM makes requests, group checks, silent requests, requests with an own formula, with a choice of rolls and for passive values, how often the GM uses a preset and how often the GM rolls for a character
 * the settings *Look*, *Open a roll window*, *Sound with a request* and *Your rolls skip the dialog* (only the chosen option)
 * where errors occur in the module code: file, line and error type, never the error message
 
@@ -112,10 +121,10 @@ Each request lives in its chat message. Deleting the card deletes the request. T
 
 | Function | Does |
 | --- | --- |
-| `request(options)` | Makes a request (GM) and returns its chat message. `options`: `actors` (actors, tokens or their UUIDs), `type` and `key` (see `rollTypes()`), or `type: "formula"` with `formula` and `label`, plus optional `dc`, `showDc`, `mode` (`"public"`, `"gm"`, `"blind"`), `advantage` (`"normal"`, `"advantage"`, `"disadvantage"`), `group`, `autoRollNpcs`, `note` |
+| `request(options)` | Makes a request (GM) and returns its chat message. `options`: `actors` (actors, tokens or their UUIDs), `type` and `key` (see `rollTypes()`), or `choices` with two or more `{type, key}` so each character picks one, or `type: "formula"` with `formula` and `label`, plus optional `dc`, `showDc`, `mode` (`"public"`, `"gm"`, `"blind"`, `"silent"`), `advantage` (`"normal"`, `"advantage"`, `"disadvantage"`), `group` (`true` or `"half"`, `"all"`, `"any"`), `autoRollNpcs`, `note` |
 | `openDialog(defaults)` | Opens the request window (GM), optionally with values and `actors` to start with |
 | `openPrompt()` | Opens the roll window of this player |
-| `rollTypes()` | The rolls of the running system: `[{type, options: [{key, label}]}]` |
+| `rollTypes()` | The rolls of the running system: `[{type, icon, options: [{key, label, icon}]}]` |
 | `getRequest(messageOrId)` | A request and its results, or `null` |
 | `openRequests()` | The requests in the chat that are not finished |
 | `roll(messageId, actorUuid, options)` | Rolls for one character of a request (the GM for anyone, a player for own characters) |
@@ -129,6 +138,15 @@ Example:
 ```js
 const api = game.modules.get("sephrals-roll-requests").api;
 await api.request({actors: canvas.tokens.controlled, type: "save", key: "dex", dc: 15, group: true});
+
+// Each character picks one of two rolls, everyone has to succeed
+await api.request({actors: canvas.tokens.controlled, choices: [{type: "skill", key: "ath"}, {type: "skill", key: "acr"}], dc: 12, group: "all"});
+
+// The GM rolls for everyone, the players hear nothing of it
+await api.request({actors: canvas.tokens.controlled, type: "skill", key: "prc", dc: 15, mode: "silent"});
+
+// No roll at all: the passive values on a card for the GM
+await api.request({actors: canvas.tokens.controlled, type: "passive", key: "prc", dc: 15});
 ```
 
 ### Hooks
@@ -139,4 +157,4 @@ Every client calls these hooks, so a module that changes documents should run it
 | --- | --- |
 | `sephrals-roll-requests.requested` | A request was made (only on the GM's client that made it) |
 | `sephrals-roll-requests.result` | A character's result arrived or changed (a reroll). Second argument: that entry |
-| `sephrals-roll-requests.completed` | Every character has rolled. Again when a result the GM took back was rolled once more |
+| `sephrals-roll-requests.completed` | Every character has rolled. Again when a result the GM took back was rolled once more. A request for passive values calls it only on the GM's client that made it |

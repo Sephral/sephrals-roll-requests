@@ -8,7 +8,8 @@
 import {getAdapter, rollGroups, choiceLabel} from "./adapters/index.mjs";
 import {HOOKS, MODULE_ID, esc, fromUuidQuiet, gmIds, t} from "./config.mjs";
 import {debugTrace} from "./debug.mjs";
-import {buildRequest, cardRecipients, normalizeOptions, publicResult, summarize} from "./request-model.mjs";
+import {buildRequest, cardRecipients, judge, normalizeOptions, parseRollId, pickChoice, publicResult,
+  summarize} from "./request-model.mjs";
 import {countFeature} from "./usage.mjs";
 
 /** Writes to a card on the active GM's client, one after the other per card. */
@@ -79,10 +80,31 @@ export function playerOwners(actor) {
  */
 export function describe(request) {
   if ( request.type === "formula" ) return request.label || request.formula;
+  if ( request.choices?.length ) return request.choices.map(c => describeRoll(c)).join(` ${t("SRR.Request.or")} `);
+  return describeRoll({type: request.type, key: request.key, title: request.title});
+}
+
+/**
+ * The text of one roll.
+ * @param {{type: string, key: string, title?: string}} roll
+ * @returns {string}
+ */
+export function describeRoll({type, key, title}) {
   // The stored name covers choices only some characters have (a Savage Worlds skill outside the core skills)
-  const name = choiceLabel(request.type, request.key) ?? (request.title || request.key);
-  const key = `SRR.Label.${request.type}`;
-  return game.i18n.has(key) ? t(key, {name}) : name;
+  const name = choiceLabel(type, key) ?? (title || key);
+  const label = `SRR.Label.${type}`;
+  return game.i18n.has(label) ? t(label, {name}) : name;
+}
+
+/**
+ * The text of a roll a character chose, by its id.
+ * @param {object} request
+ * @param {string} id
+ * @returns {string}
+ */
+export function describeChoice(request, id) {
+  const {type, key} = parseRollId(id);
+  return describeRoll(request.choices?.find(c => (c.type === type) && (c.key === key)) ?? {type, key});
 }
 
 /* -------------------------------------------- */
@@ -136,7 +158,8 @@ function plainContent(request) {
 }
 
 /**
- * Create a request and its card (GM). NPCs roll at once when the request says so.
+ * Create a request and its card (GM). NPCs roll at once when the request says so, a silent request rolls for
+ * everyone at once, and passive values stand on the card from the start.
  * @param {object} input   Options of the request plus `actors`
  * @returns {Promise<ChatMessage>}
  */
@@ -147,10 +170,12 @@ export async function createRequest(input={}) {
   if ( options.advantage !== "normal" && !adapter.advantage ) options.advantage = "normal";
   const entries = entriesFrom(input.actors);
   // The characters' own choices count too (a Savage Worlds skill outside the core skills)
-  const groups = rollGroups(entries.map(e => entryActor(e)).filter(Boolean));
-  if ( (options.type !== "formula") && !choiceLabel(options.type, options.key, groups) ) {
+  const groups = rollGroups([...entries.map(e => entryActor(e)).filter(Boolean), ...(input.rollActors ?? [])]);
+  const rolls = options.choices.length ? options.choices : [options];
+  if ( rolls.some(roll => (roll.type !== "formula") && !choiceLabel(roll.type, roll.key, groups)) ) {
     throw new Error(t("SRR.Error.unknownChoice"));
   }
+  options.choices = options.choices.map(c => ({...c, title: choiceLabel(c.type, c.key, groups)}));
   const request = buildRequest(options, entries, {
     id: foundry.utils.randomID(12),
     system: game.system.id,
@@ -159,6 +184,11 @@ export async function createRequest(input={}) {
     userId: game.user.id
   });
   request.title = (options.type === "formula") ? "" : choiceLabel(options.type, options.key, groups);
+  if ( request.type === "passive" ) request.results = passiveResults(request, adapter);
+  // Foundry only makes a combat for a GM, so the players need it to be there
+  if ( (request.type === "combat") && (request.key === "initiative") && !game.combat && canvas?.scene ) {
+    await getDocumentClass("Combat").create({scene: canvas.scene.id, active: true});
+  }
   const players = [...new Set(entries.flatMap(e => playerOwners(entryActor(e)).map(u => u.id)))];
   const message = await ChatMessage.implementation.create({
     content: plainContent(request),
@@ -171,14 +201,36 @@ export async function createRequest(input={}) {
   countFeature(MODULE_ID, "request");
   if ( request.group ) countFeature(MODULE_ID, "groupCheck");
   if ( request.type === "formula" ) countFeature(MODULE_ID, "formula");
+  if ( request.type === "passive" ) countFeature(MODULE_ID, "passive");
+  else if ( request.mode === "silent" ) countFeature(MODULE_ID, "silent");
+  if ( request.choices.length ) countFeature(MODULE_ID, "choice");
   Hooks.callAll(HOOKS.requested, publicResult(request, message.id));
-  if ( request.autoRollNpcs ) {
-    const {rollEntry} = await import("./rolling.mjs");
-    for ( const entry of entries.filter(e => e.npc) ) {
-      await rollEntry(message, entry, {fastForward: true}).catch(err => console.error(`${MODULE_ID} |`, err));
-    }
+  if ( request.type === "passive" ) {
+    Hooks.callAll(HOOKS.completed, publicResult(request, message.id));
+    return message;
+  }
+  const {rollEntry} = await import("./rolling.mjs");
+  const atOnce = request.mode === "silent" ? entries : (request.autoRollNpcs ? entries.filter(e => e.npc) : []);
+  for ( const entry of atOnce ) {
+    await rollEntry(message, entry, {fastForward: true}).catch(err => console.error(`${MODULE_ID} |`, err));
   }
   return message;
+}
+
+/**
+ * The results of a request for a passive value: read from the characters, nobody rolls.
+ * @param {object} request
+ * @param {object} adapter
+ * @returns {Record<string, object>}
+ */
+function passiveResults(request, adapter) {
+  const results = {};
+  for ( const entry of request.entries ) {
+    const total = adapter.passive?.(entryActor(entry), request.key) ?? null;
+    results[entry.id] = {total, natural: null, ...judge({total}, request.dc, "d20"), messageId: null,
+      userId: game.user.id, at: Date.now()};
+  }
+  return results;
 }
 
 /* -------------------------------------------- */
@@ -192,6 +244,16 @@ export async function createRequest(input={}) {
 export function onCreateChatMessage(message) {
   const answer = message.flags?.[MODULE_ID]?.answer;
   if ( !answer || !game.user.isActiveGM ) return;
+  enqueue(answer.cardId, () => recordAnswer(message, answer));
+}
+
+/**
+ * Write the result of a silent roll, which never became a chat message. Foundry shows a whispered roll to everyone as
+ * a private roll, so players would notice that the GM rolled.
+ * @param {ChatMessage} message   The message that was not created
+ * @param {{cardId: string, requestId: string, entryId: string}} answer
+ */
+export function recordSilent(message, answer) {
   enqueue(answer.cardId, () => recordAnswer(message, answer));
 }
 
@@ -236,13 +298,14 @@ async function recordAnswer(message, answer, {update=false, late=false}={}) {
   const entry = request.entries.find(e => e.id === answer.entryId);
   if ( !entry ) return trace("answer for an unknown character");
   const author = message.author;
+  if ( (request.mode === "silent") && !author?.isGM ) return trace("answer from a user without rights", {user: author?.id});
   const before = request.results?.[entry.id] ?? null;
   if ( update && (before?.messageId !== message.id) ) return;
   if ( before && !update && !(author?.isGM || (author?.id === before.userId)) ) return trace("already rolled");
   if ( !author || !canRoll(entry, author) ) return trace("answer from a user without rights", {user: author?.id});
   let result;
   try {
-    result = getAdapter(request.system).evaluate(message, request);
+    result = getAdapter(request.system).evaluate(message, {...request, ...pickChoice(request, answer.choice)});
   } catch(err) {
     console.error(`${MODULE_ID} | Reading the roll failed`, err);
     result = {total: null, success: null, degree: null};
@@ -250,6 +313,7 @@ async function recordAnswer(message, answer, {update=false, late=false}={}) {
   if ( !Number.isFinite(result.total) ) return trace("answer without a total");
   if ( update && (before.total === result.total) && (before.success === result.success) ) return;
   const stored = {...result, messageId: message.id, userId: author.id, at: Date.now()};
+  if ( answer.choice ) stored.choice = answer.choice;
   await card.update({[`flags.${MODULE_ID}.request.results.${entry.id}`]: stored});
   const event = !before ? (late ? "recorded late" : "recorded") : update ? "updated" : "rerolled";
   trace(event, {total: result.total, success: result.success, user: author.id, before: before?.total ?? null});

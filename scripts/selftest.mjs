@@ -9,7 +9,7 @@ import {judge, summarize} from "./request-model.mjs";
 
 /** The roll method each adapter needs on an actor, by roll type. */
 const METHODS = {
-  dnd5e: {save: "rollSavingThrow", check: "rollAbilityCheck", skill: "rollSkill", tool: "rollToolCheck"},
+  dnd5e: {save: "rollSavingThrow", check: "rollAbilityCheck", skill: "rollSkill", tool: "rollToolCheck", combat: "rollDeathSave"},
   pf2e: {save: "getStatistic", skill: "getStatistic"},
   swade: {attribute: "rollAttribute", skill: "rollSkill"},
   crucible: {skill: "rollSkill"}
