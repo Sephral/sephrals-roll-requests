@@ -2,7 +2,7 @@
   "id": "sephrals-roll-requests",
   "title": "Sephral’s Roll Requests",
   "description": "The GM asks any group of characters for a check, save, skill or formula roll. Players roll with one click through their game system, and one live card collects every result with pass or fail against the DC, group checks included.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "compatibility": {
     "minimum": 13,
     "verified": "14.370"
