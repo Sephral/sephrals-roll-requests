@@ -2,7 +2,7 @@
 
 **“Everyone, a Wisdom save.” Then the chat fills with rolls, someone rolls a Wisdom check instead, and you count by hand who made it. Roll Requests asks the whole group in two clicks, players roll with one, and a single card shows who passed.**
 
-[![Install by link](https://img.shields.io/badge/Foundry%20VTT-Install%20by%20link-fe6a1f?logo=foundryvirtualtabletop&logoColor=white)](#install)
+[![Foundry VTT package](https://img.shields.io/badge/Foundry%20VTT-Package%20page-fe6a1f?logo=foundryvirtualtabletop&logoColor=white)](https://foundryvtt.com/packages/sephrals-roll-requests)
 [![Join Discord](https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&logoColor=white)](https://discord.gg/7BjCgDYaBP)
 [![More modules by Sephral](https://img.shields.io/badge/GitHub-More%20modules%20by%20Sephral-181717?logo=github&logoColor=white)](https://github.com/Sephral)
 
@@ -35,19 +35,7 @@ Players need to be online to roll, the GM can roll for anyone from the card.
 
 ## Install
 
-Roll Requests is not in Foundry's module search yet. Copy this link:
-
-```text
-https://github.com/Sephral/sephrals-roll-requests/releases/latest/download/module.json
-```
-
-1. In Foundry's setup screen open **Add-on Modules** and click **Install Module**.
-2. Paste the link into **Manifest URL** at the bottom of the window.
-3. Click **Install**, then enable the module in your world.
-
-On The Forge open the Bazaar, click **Install From Manifest** and paste the link.
-
-![How to install a module by its link](https://raw.githubusercontent.com/Sephral/Sephral/main/media/install.gif)
+Search for **Roll Requests** in Foundry's module browser or open the [package page](https://foundryvtt.com/packages/sephrals-roll-requests).
 
 Foundry VTT 13 and 14 · any game system · English and German
 
