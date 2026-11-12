@@ -91,7 +91,7 @@ With the GM’s consent only the active GM’s browser counts, and it sends at m
 * on how many of the last 30 days the module was used
 * how often the GM makes requests, group checks, silent requests, requests with an own formula, with a choice of rolls and for passive values, how often the GM uses a preset and how often the GM rolls for a character
 * the settings *Look*, *Open a roll window*, *Sound with a request* and *Your rolls skip the dialog* (only the chosen option)
-* where errors occur in the module code: file, line and error type, never the error message
+* where errors occur in the module code: file, line, error type and whether the error arose in the module itself, in Foundry, in the game system or in another module, never the error message or the name of another module
 
 No names, formulas, notes, results or other content of the world are sent, and nothing the players do is counted.
 
