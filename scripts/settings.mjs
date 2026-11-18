@@ -98,7 +98,7 @@ class RequestsSelfTestMenu extends foundry.applications.api.ApplicationV2 {
 export function changeLanguage(value, redraw) {
   applyModuleLanguage(value).then(() => {
     redraw();
-    ui.controls?.render?.({reset: true});
+    ui.controls?.render?.({reset: true})?.catch?.(() => {});
     if ( game.settings.sheet?.rendered ) game.settings.sheet.render();
   });
 }

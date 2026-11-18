@@ -23,7 +23,7 @@ Hooks.once("init", () => {
   registerSettings({
     language: value => changeLanguage(value, redraw),
     redraw,
-    controls: () => ui.controls?.render?.({reset: true})
+    controls: () => ui.controls?.render?.({reset: true})?.catch?.(() => {})
   });
   // Counted only on the active GM's client, like every Sephral module
   registerUsage(MODULE_ID, {
