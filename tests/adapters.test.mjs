@@ -4,7 +4,7 @@ import {firstTotal, naturalD20, rollsOf, sortByLabel} from "../scripts/adapters/
 import {crucible, crucibleGroups, crucibleRollArgs} from "../scripts/adapters/crucible.mjs";
 import {dnd5e, dnd5eGroups, dnd5eMessage, dnd5eRollArgs, dnd5eRollKind} from "../scripts/adapters/dnd5e.mjs";
 import {ADAPTERS, generic, getAdapter} from "../scripts/adapters/index.mjs";
-import {pf2e, pf2eGroups, pf2eRollArgs} from "../scripts/adapters/pf2e.mjs";
+import {checkContext, pf2e, pf2eGroups, pf2eRollArgs} from "../scripts/adapters/pf2e.mjs";
 import {findSkill, swade, swadeGroups, swadeSlug} from "../scripts/adapters/swade.mjs";
 
 /** A roll as messages hold it: the dice with their results and the total. */
@@ -17,7 +17,8 @@ test("the adapter follows the system, others get formulas", () => {
   assert.equal(getAdapter("swade"), swade);
   assert.equal(getAdapter("crucible"), crucible);
   assert.equal(getAdapter("coc7"), generic);
-  assert.deepEqual(Object.keys(ADAPTERS).sort(), ["crucible", "dnd5e", "pf2e", "swade"]);
+  assert.deepEqual(Object.keys(ADAPTERS).sort(), ["crucible", "dnd5e", "pf2e", "sf2e", "swade"]);
+  assert.equal(getAdapter("sf2e"), pf2e);
 });
 
 test("the kept d20 and the total of a message", () => {
@@ -242,4 +243,23 @@ test("PF2e tells which statistic a check message rolled", () => {
   assert.equal(pf2e.matches(msg(["mercantile-lore", "skill-check"]), {type: "skill", key: "mercantile-lore"}), true);
   assert.equal(pf2e.matches({flags: {}}, {type: "save", key: "reflex"}), null);
   assert.equal(pf2e.matches(msg(["reflex"]), {type: "formula", key: ""}), null);
+});
+
+test("Starfinder 2e reads its check context from either flag scope", () => {
+  const msg = (scope, domains) => ({flags: {[scope]: {context: {domains, dc: {value: 15}, outcome: "success"}}}});
+  assert.deepEqual(checkContext(msg("sf2e", ["will"]), "sf2e").domains, ["will"]);
+  assert.deepEqual(checkContext(msg("pf2e", ["will"]), "sf2e").domains, ["will"]);
+  assert.deepEqual(checkContext(msg("sf2e", ["will"]), "pf2e").domains, ["will"]);
+  assert.equal(checkContext({flags: {}}, "sf2e"), undefined);
+  const both = {flags: {pf2e: {context: {domains: ["a"]}}, sf2e: {context: {domains: ["b"]}}}};
+  assert.deepEqual(checkContext(both, "sf2e").domains, ["b"]);
+  assert.deepEqual(checkContext(both, "pf2e").domains, ["a"]);
+  globalThis.game = {system: {id: "sf2e"}};
+  try {
+    assert.equal(pf2e.matches(msg("sf2e", ["reflex", "saving-throw"]), {type: "save", key: "reflex"}), true);
+    assert.equal(pf2e.matches(msg("sf2e", ["stealth"]), {type: "save", key: "reflex"}), false);
+    assert.equal(pf2e.evaluate({...msg("sf2e", ["reflex"]), rolls: [{total: 14, dice: [{results: [{result: 12}]}]}]}, {dc: 15}).degree, "success");
+  } finally {
+    delete globalThis.game;
+  }
 });

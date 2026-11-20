@@ -27,6 +27,8 @@ The window starts with your last roll. DC, advantage, results, group and note st
 | Note | Optional text on the card, such as “The bridge sways”. |
 | NPCs roll at once | NPCs and other characters no player owns roll right away, without a dialog. |
 | Bookmark | Saves the request without who rolls as a preset. The cross on a preset deletes it. |
+| Roll secretly for all | The button next to *Send*: you roll for everyone who is ticked (the selected tokens, when *Selected* is open), whatever *Results* says. Players get no prompt and no chat message, the card with every total, pass or fail against the DC and the group outcome is whispered to the GMs alone. It is the *Silent* request in one click. |
+| Sent lately | The last 8 requests of this GM with the characters they went to, in a row above the buttons. A click sends one again at once, the cross forgets it. The circular arrow next to the bookmark repeats the last one. Characters that no longer exist are left out. Presets stay as they are: they hold no characters and fill the window instead of sending. |
 
 ### The card
 
@@ -53,7 +55,7 @@ What you see on the card depends on the request: in public requests every total,
 | System | Rolls |
 | --- | --- |
 | D&D 5e (5.x and 6.x) | Saving throws, ability checks, skills, tools |
-| Pathfinder 2e | Perception, saving throws, skills (lore skills with an own formula such as `1d20 + @actor.skills.warfare-lore.mod`) |
+| Pathfinder 2e, Starfinder 2e | Perception, saving throws, skills (lore skills with an own formula such as `1d20 + @actor.skills.warfare-lore.mod`) |
 | Savage Worlds (SWADE) | Attributes, skills (the core skills and the skills of the characters). A character without the skill makes an unskilled attempt |
 | Crucible | Skills |
 | Any other system | Own formulas with the character's roll data |
@@ -89,7 +91,7 @@ The module can take part in a small usage report shared by all of Sephral’s mo
 With the GM’s consent only the active GM’s browser counts, and it sends at most one report a day. The counts are kept in a hidden world setting, so all browsers and computers of the GM count together, and turning the statistics off deletes them. A copy of a world gets its own world ID. The question lists everything the report contains, from the Foundry version to a random world ID. For Roll Requests it holds:
 
 * on how many of the last 30 days the module was used
-* how often the GM makes requests, group checks, silent requests, requests with an own formula, with a choice of rolls and for passive values, how often the GM uses a preset and how often the GM rolls for a character
+* how often the GM makes requests, group checks, silent requests, requests with an own formula, with a choice of rolls and for passive values, how often the GM uses a preset, rolls for a character, rolls secretly for all and sends a recent request again
 * the settings *Look*, *Open a roll window*, *Sound with a request* and *Your rolls skip the dialog* (only the chosen option)
 * where errors occur in the module code: file, line, error type and whether the error arose in the module itself, in Foundry, in the game system or in another module, never the error message or the name of another module
 
@@ -112,6 +114,7 @@ Each request lives in its chat message. Deleting the card deletes the request. T
 ## Compatibility
 
 * Foundry VTT 13 and 14.
+* Starfinder 2e (`sf2e`) runs on the Pathfinder 2e adapter: the statistics and the check context of a roll message are read from the `pf2e` or the `sf2e` flag scope, `CONFIG.PF2E` or `CONFIG.SF2E`. Not yet checked in a live Starfinder 2e world.
 * The rolls are the game system's own, so Dice So Nice, Roll Breakdown, Midi-QOL and other modules that watch rolls see them as usual.
 * Results reach the card while a GM is online. Rolls made while no GM is there are written into their cards when the next GM joins, and when the active GM leaves another GM takes over.
 
@@ -122,6 +125,9 @@ Each request lives in its chat message. Deleting the card deletes the request. T
 | Function | Does |
 | --- | --- |
 | `request(options)` | Makes a request (GM) and returns its chat message. `options`: `actors` (actors, tokens or their UUIDs), `type` and `key` (see `rollTypes()`), or `choices` with two or more `{type, key}` so each character picks one, or `type: "formula"` with `formula` and `label`, plus optional `dc`, `showDc`, `mode` (`"public"`, `"gm"`, `"blind"`, `"silent"`), `advantage` (`"normal"`, `"advantage"`, `"disadvantage"`), `group` (`true` or `"half"`, `"all"`, `"any"`), `autoRollNpcs`, `note` |
+| `rollSecretly(options)` | Like `request` with `mode: "silent"` (GM): rolls for every character at once, nothing reaches the players, the card is whispered to the GMs. Counts as a secret roll for all |
+| `repeat(index)` | Sends a recent request again (GM), `0` is the last one up to `7`. Returns its chat message or `null` |
+| `recentRequests()` | The recent requests of this GM, newest first: `{name, rolls, values, actors}` (stored as the client setting `recentRequests`, up to 8, identical requests move up) |
 | `openDialog(defaults)` | Opens the request window (GM), optionally with values and `actors` to start with |
 | `openPrompt()` | Opens the roll window of this player |
 | `rollTypes()` | The rolls of the running system: `[{type, icon, options: [{key, label, icon}]}]` |

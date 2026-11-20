@@ -9,7 +9,7 @@ import {getAdapter, rollGroups, choiceLabel} from "./adapters/index.mjs";
 import {HOOKS, MODULE_ID, esc, fromUuidQuiet, gmIds, t} from "./config.mjs";
 import {debugTrace} from "./debug.mjs";
 import {buildRequest, cardRecipients, judge, normalizeOptions, parseRollId, pickChoice, publicResult,
-  summarize} from "./request-model.mjs";
+  pushRecentRequest, requestFromRecent, summarize} from "./request-model.mjs";
 import {countFeature} from "./usage.mjs";
 
 /** Writes to a card on the active GM's client, one after the other per card. */
@@ -214,6 +214,72 @@ export async function createRequest(input={}) {
   for ( const entry of atOnce ) {
     await rollEntry(message, entry, {fastForward: true}).catch(err => console.error(`${MODULE_ID} |`, err));
   }
+  return message;
+}
+
+/**
+ * Roll secretly for everyone at once (GM): a silent request. The players get no prompt and no chat message, the card
+ * with every result, the pass or fail against the DC and the group outcome is whispered to the GMs alone.
+ * @param {object} input   Options of the request plus `actors`; the mode is always silent
+ * @returns {Promise<ChatMessage>}
+ */
+export async function createSecretRequest(input={}) {
+  const message = await createRequest({...input, mode: "silent"});
+  if ( input.type !== "passive" ) countFeature(MODULE_ID, "gmRollAll");
+  return message;
+}
+
+/**
+ * The requests this GM sent lately, newest first.
+ * @returns {object[]}
+ */
+export function recentRequests() {
+  try {
+    const list = game.settings.get(MODULE_ID, "recentRequests");
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Remember a sent request at the front of the list.
+ * @param {object} record   From `recentRecord`
+ * @returns {Promise<void>}
+ */
+export async function rememberRequest(record) {
+  await game.settings.set(MODULE_ID, "recentRequests", pushRecentRequest(recentRequests(), record));
+}
+
+/**
+ * Send a remembered request again to the same characters (GM). Characters that no longer exist are left out.
+ * @param {object|number} [which=0]   A record, or its place in the list (0 is the last request)
+ * @returns {Promise<ChatMessage|null>}
+ */
+export async function repeatRequest(which=0) {
+  if ( !game.user.isGM ) throw new Error(t("SRR.Error.gmOnly"));
+  const record = (typeof which === "number") ? recentRequests()[which] : which;
+  if ( !record?.rolls?.length ) {
+    ui.notifications.info(t("SRR.Request.repeatNone"));
+    return null;
+  }
+  const actors = record.actors.filter(uuid => fromUuidQuiet(uuid));
+  if ( !actors.length ) {
+    ui.notifications.warn(t("SRR.Request.repeatNoActors"));
+    return null;
+  }
+  const input = {...requestFromRecent(record, record.rolls.map(parseRollId)), actors};
+  let message;
+  try {
+    message = await createRequest(input);
+  } catch(err) {
+    const key = String(err?.message ?? err);
+    ui.notifications.warn(game.i18n.has(key) ? t(key) : key);
+    return null;
+  }
+  countFeature(MODULE_ID, "requestRepeated");
+  if ( (input.mode === "silent") && (input.type !== "passive") ) countFeature(MODULE_ID, "gmRollAll");
+  await rememberRequest({...record, actors});
   return message;
 }
 

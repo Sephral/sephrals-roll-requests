@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {buildRequest, cardRecipients, groupSucceeds, judge, normalizeChoices, normalizeOptions, parseDc, parseRollId, pendingFor,
-  pickChoice, publicResult, rollId, rollVisibility, summarize, viewFor, takeReplaced, pickMarker} from "../scripts/request-model.mjs";
+  pickChoice, publicResult, rollId, rollVisibility, summarize, viewFor, takeReplaced, pickMarker, pushRecentRequest, recentRecord, requestFromRecent,
+  sameRecentRequest, RECENT_REQUEST_LIMIT} from "../scripts/request-model.mjs";
 
 const entries = [
   {id: "a", actorUuid: "Actor.a", name: "Ayla", npc: false},
@@ -245,4 +246,56 @@ test("roll ids", () => {
   assert.deepEqual(parseRollId("skill:prc"), {type: "skill", key: "prc"});
   assert.deepEqual(parseRollId("formula:"), {type: "formula", key: ""});
   assert.deepEqual(parseRollId("skill:a:b"), {type: "skill", key: "a:b"});
+});
+
+const values = (extra={}) => ({formula: "", label: "", dc: 15, showDc: false, mode: "silent", advantage: "normal", group: "half",
+  note: "", autoRollNpcs: true, ...extra});
+const record = (extra={}) => recentRecord({rolls: ["save:dex"], actors: ["Actor.a", "Actor.b"], name: "Dex save, DC 15", values: values(extra)});
+
+test("a recent request keeps what was asked and who, nothing else", () => {
+  const r = recentRecord({rolls: ["save:dex"], actors: ["Actor.a", "Actor.a", "Actor.b"], name: "Dex", values: {...values(), junk: 1}});
+  assert.deepEqual(Object.keys(r).sort(), ["actors", "name", "rolls", "values"]);
+  assert.deepEqual(r.actors, ["Actor.a", "Actor.b"]);
+  assert.equal("junk" in r.values, false);
+  assert.equal(r.values.mode, "silent");
+});
+
+test("recent requests: newest first, identical ones move up, at most eight", () => {
+  let list = [];
+  list = pushRecentRequest(list, record({dc: 10}));
+  list = pushRecentRequest(list, record({dc: 11}));
+  list = pushRecentRequest(list, record({dc: 10}));
+  assert.deepEqual(list.map(r => r.values.dc), [10, 11]);
+  for ( let dc = 20; dc < 40; dc++ ) list = pushRecentRequest(list, record({dc}));
+  assert.equal(list.length, RECENT_REQUEST_LIMIT);
+  assert.equal(list[0].values.dc, 39);
+  const input = [record()];
+  pushRecentRequest(input, record({dc: 3}));
+  assert.equal(input.length, 1);
+});
+
+test("the same request needs the same characters, in any order", () => {
+  const a = record();
+  assert.equal(sameRecentRequest(a, {...a, actors: [...a.actors].reverse(), name: "other text"}), true);
+  assert.equal(sameRecentRequest(a, {...a, actors: ["Actor.a"]}), false);
+  assert.equal(sameRecentRequest(a, record({mode: "public"})), false);
+});
+
+test("a recent request becomes the input of a request again", () => {
+  const input = requestFromRecent(record(), [{type: "save", key: "dex"}]);
+  assert.equal(input.type, "save");
+  assert.equal(input.key, "dex");
+  assert.equal(input.choices, undefined);
+  assert.equal(input.group, "half");
+  assert.equal(input.mode, "silent");
+  assert.equal(input.showDc, false);
+  assert.equal(requestFromRecent(record({group: "off"}), [{type: "save", key: "dex"}]).group, false);
+  const two = requestFromRecent(record(), [{type: "skill", key: "ath"}, {type: "skill", key: "acr"}]);
+  assert.equal(two.choices.length, 2);
+  assert.equal(two.key, "ath");
+  assert.equal(requestFromRecent(record({autoRollNpcs: false}), [{type: "save", key: "dex"}]).autoRollNpcs, false);
+});
+
+test("a secret request reaches the game masters alone", () => {
+  assert.deepEqual(cardRecipients("silent", ["g1", "g2"], ["p1"]), ["g1", "g2"]);
 });

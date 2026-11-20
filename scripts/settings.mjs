@@ -60,6 +60,8 @@ export function registerSettings(handlers) {
   // The saved presets and the last rolls of this GM, shown above the roll buttons
   game.settings.register(MODULE_ID, "presets", {scope: "client", config: false, type: Array, default: []});
   game.settings.register(MODULE_ID, "recentRolls", {scope: "client", config: false, type: Array, default: []});
+  // The last requests of this GM with who was asked, to send them again
+  game.settings.register(MODULE_ID, "recentRequests", {scope: "client", config: false, type: Array, default: []});
   game.settings.register(MODULE_ID, "acknowledgedVersions", {scope: "client", config: false, type: String, default: ""});
 
   game.settings.registerMenu(MODULE_ID, "selfTest", {

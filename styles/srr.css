@@ -877,3 +877,55 @@
 .srr-app button {
   text-transform: none;
 }
+
+/* Requests sent lately and the secret roll for everyone */
+.srr-rq-recent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--srr-line);
+}
+
+.srr-rq-recent.is-hidden {
+  display: none;
+}
+
+.srr-recent-label {
+  flex: none;
+  margin-right: 2px;
+  color: var(--srr-muted);
+  font-size: 12px;
+}
+
+.srr-chip.is-recent > button:first-child > i {
+  color: var(--srr-muted);
+}
+
+.srr-rq .srr-repeat-last {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 6px;
+  color: var(--srr-accent);
+}
+
+.srr-rq .srr-secret-all {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 260px;
+  min-height: 36px;
+  padding: 3px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.srr-rq .srr-secret-all[hidden] {
+  display: none;
+}

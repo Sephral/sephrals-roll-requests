@@ -367,3 +367,70 @@ export function pickMarker(markers, matches) {
 }
 
 export const __test__ = {DEGREES, NOTE_LENGTH};
+
+/* -------------------------------------------- */
+/*  Recent requests                             */
+/* -------------------------------------------- */
+
+/** How many sent requests a GM keeps to send again. */
+export const RECENT_REQUEST_LIMIT = 8;
+
+/**
+ * The record of a sent request: what was asked and who was asked, nothing the world holds besides.
+ * @param {object} input
+ * @param {string[]} input.rolls       The roll ids of the window
+ * @param {object} input.values        formula, label, dc, showDc, mode, advantage, group, note
+ * @param {string[]} input.actors      The uuids that rolled
+ * @param {string} input.name          The text of the request
+ * @returns {object}
+ */
+export function recentRecord({rolls, values, actors, name}) {
+  const {formula="", label="", dc="", showDc=true, mode="public", advantage="normal", group="off", note="", autoRollNpcs=true} = values ?? {};
+  return {name: String(name ?? ""), rolls: [...rolls], actors: [...new Set(actors)],
+    values: {formula, label, dc, showDc, mode, advantage, group, note, autoRollNpcs}};
+}
+
+/**
+ * The same request again? Compares the rolls, the values and the characters, not the name.
+ * @param {object} a
+ * @param {object} b
+ * @returns {boolean}
+ */
+export function sameRecentRequest(a, b) {
+  const key = r => JSON.stringify([r.rolls, r.values, [...(r.actors ?? [])].sort()]);
+  return key(a) === key(b);
+}
+
+/**
+ * Put a request at the front of the list. An identical one moves up instead of standing twice.
+ * @param {object[]} list
+ * @param {object} record
+ * @param {number} [limit]
+ * @returns {object[]}
+ */
+export function pushRecentRequest(list, record, limit=RECENT_REQUEST_LIMIT) {
+  return [record, ...(list ?? []).filter(item => !sameRecentRequest(item, record))].slice(0, limit);
+}
+
+/**
+ * The input of a request for `createRequest` from a stored record. The window's "off" becomes no group rule.
+ * @param {object} record
+ * @param {object[]} parsedRolls    The rolls as {type, key}, from `parseRollId`
+ * @returns {object}
+ */
+export function requestFromRecent(record, parsedRolls) {
+  const {values} = record;
+  return {
+    ...parsedRolls[0],
+    choices: parsedRolls.length > 1 ? parsedRolls : undefined,
+    formula: values.formula,
+    label: values.label,
+    dc: values.dc,
+    showDc: values.showDc,
+    mode: values.mode,
+    advantage: values.advantage,
+    group: values.group === "off" ? false : values.group,
+    note: values.note,
+    autoRollNpcs: values.autoRollNpcs !== false
+  };
+}

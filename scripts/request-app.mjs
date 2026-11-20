@@ -6,8 +6,9 @@
 
 import {getAdapter, rollGroups} from "./adapters/index.mjs";
 import {MODULE_ID, addSettingsGear, esc, fromUuidQuiet, isShown, setting, t} from "./config.mjs";
-import {ADVANTAGE, CHOOSABLE, GROUP_RULES, MODES, parseRollId, rollId} from "./request-model.mjs";
-import {createRequest, entriesFrom, playerOwners} from "./requests.mjs";
+import {ADVANTAGE, CHOOSABLE, GROUP_RULES, MODES, parseRollId, recentRecord, rollId} from "./request-model.mjs";
+import {createRequest, createSecretRequest, entriesFrom, playerOwners, recentRequests, rememberRequest,
+  repeatRequest} from "./requests.mjs";
 import {countFeature} from "./usage.mjs";
 
 const {ApplicationV2} = foundry.applications.api;
@@ -75,6 +76,9 @@ export class RequestWindow extends ApplicationV2 {
       srrQuick: RequestWindow.#onQuick,
       srrPresetRemove: RequestWindow.#onPresetRemove,
       srrPresetSave: RequestWindow.#onPresetSave,
+      srrRepeat: RequestWindow.#onRepeat,
+      srrRecentRemove: RequestWindow.#onRecentRemove,
+      srrSecretAll: RequestWindow.#onSecretAll,
       srrToolTab: RequestWindow.#onToolTab,
       srrScope: RequestWindow.#onScope,
       srrNone: RequestWindow.#onNone,
@@ -424,6 +428,24 @@ export class RequestWindow extends ApplicationV2 {
     return saved + chips;
   }
 
+  /**
+   * The bar of the requests sent lately: one click sends one of them again to the same characters.
+   * @returns {string}
+   */
+  #recentHtml() {
+    const list = recentRequests();
+    if ( !list.length ) return "";
+    const chips = list.map((record, index) => {
+      const count = record.actors.length;
+      const text = `${record.name} (${count})`;
+      return `<span class="srr-chip is-recent"><button type="button" data-action="srrRepeat" data-index="${index}"
+        data-tooltip="${esc(t("SRR.Request.repeatHint", {what: text}))}">${iconHtml(record.values?.mode === "silent" ? "fa-user-secret" : "fa-rotate-right")}<span>${esc(text)}</span></button>
+        <button type="button" class="srr-chip-x" data-action="srrRecentRemove" data-index="${index}"
+          aria-label="${esc(t("SRR.Request.recentRemove"))}" data-tooltip="${esc(t("SRR.Request.recentRemove"))}"><i class="fa-solid fa-xmark" inert></i></button></span>`;
+    }).join("");
+    return `<span class="srr-recent-label">${iconHtml("fa-clock-rotate-left")} ${esc(t("SRR.Request.recent"))}</span>${chips}`;
+  }
+
   /** @returns {object[]} */
   #presets() {
     try {
@@ -468,6 +490,7 @@ export class RequestWindow extends ApplicationV2 {
           <input type="text" name="filter" value="${esc(this.#filter)}" autocomplete="off" placeholder="${esc(t("SRR.Request.filter"))}" aria-label="${esc(t("SRR.Request.filter"))}"></label>
         <div class="srr-quick">${this.#quickHtml()}</div>
       </div>
+      <div class="srr-rq-recent${recentRequests().length ? "" : " is-hidden"}">${this.#recentHtml()}</div>
       <div class="srr-rq-panes">
         <div class="srr-rq-rolls">
           ${order.map(g => this.#groupHtml(g)).join("")}
@@ -495,7 +518,9 @@ export class RequestWindow extends ApplicationV2 {
       </div>
       <footer class="srr-rq-foot">
         <button type="button" class="srr-preset-save" data-action="srrPresetSave" data-tooltip="${esc(t("SRR.Request.presetSave"))}" aria-label="${esc(t("SRR.Request.presetSave"))}"><i class="fa-solid fa-bookmark" inert></i></button>
+        <button type="button" class="srr-repeat-last" data-action="srrRepeat" data-index="0" data-tooltip="${esc(t("SRR.Request.repeat"))}" aria-label="${esc(t("SRR.Request.repeat"))}"><i class="fa-solid fa-rotate-right" inert></i></button>
         <span class="srr-rq-hint">${esc(t("SRR.Request.choiceHint"))}</span>
+        <button type="button" class="srr-secret-all" data-action="srrSecretAll" data-tooltip="${esc(t("SRR.Request.secretAllHint"))}"><i class="fa-solid fa-user-secret" inert></i> <span class="srr-secret-text"></span></button>
         <button type="submit" class="srr-primary"><i class="fa-solid fa-paper-plane" inert></i> <span class="srr-send"></span></button>
       </footer></div>`;
   }
@@ -573,6 +598,15 @@ export class RequestWindow extends ApplicationV2 {
     const send = form.querySelector(".srr-send");
     if ( send ) send.textContent = this.#sendLabel();
     form.querySelector(".srr-primary")?.toggleAttribute("disabled", !this.#picked.size);
+    const secret = form.querySelector(".srr-secret-all");
+    if ( secret ) {
+      const count = this.#picked.size;
+      secret.toggleAttribute("disabled", !count || passive);
+      secret.hidden = passive;
+      const text = secret.querySelector(".srr-secret-text");
+      if ( text ) text.textContent = t(`SRR.Request.secretAll.${count === 1 ? "one" : "many"}`, {count});
+    }
+    form.querySelector(".srr-repeat-last")?.toggleAttribute("disabled", !recentRequests().length);
     this.#applyToolTab();
   }
 
@@ -934,14 +968,61 @@ export class RequestWindow extends ApplicationV2 {
    */
   static async #onSubmit(event) {
     event?.preventDefault?.();
+    await this.#send(createRequest);
+  }
+
+  /**
+   * Roll secretly for everyone who is ticked: a silent request, whatever the results setting says.
+   * @this {RequestWindow}
+   */
+  static async #onSecretAll() {
+    await this.#send(createSecretRequest);
+  }
+
+  /**
+   * Send one of the requests sent lately again.
+   * @this {RequestWindow}
+   * @param {PointerEvent} event
+   * @param {HTMLElement} target
+   */
+  static async #onRepeat(event, target) {
+    const message = await repeatRequest(Number(target.dataset.index));
+    if ( message ) this.close();
+  }
+
+  /**
+   * Forget one of the requests sent lately.
+   * @this {RequestWindow}
+   * @param {PointerEvent} event
+   * @param {HTMLElement} target
+   */
+  static async #onRecentRemove(event, target) {
+    const list = [...recentRequests()];
+    list.splice(Number(target.dataset.index), 1);
+    await game.settings.set(MODULE_ID, "recentRequests", list);
+    const bar = this.element.querySelector(".srr-rq-recent");
+    if ( bar ) {
+      bar.innerHTML = this.#recentHtml();
+      bar.classList.toggle("is-hidden", !list.length);
+    }
+    this.#sync();
+  }
+
+  /**
+   * Make the request of the window and remember it.
+   * @param {Function} create   createRequest, or createSecretRequest
+   * @returns {Promise<void>}
+   */
+  async #send(create) {
     const actors = [...this.#picked];
     if ( !actors.length ) {
       ui.notifications.warn(t("SRR.Error.noActors"));
       return;
     }
     const values = this.#values;
+    const input = this.#request();
     try {
-      await createRequest({...this.#request(), actors, rollActors: this.#shownActors()});
+      await create({...input, actors, rollActors: this.#shownActors()});
     } catch(err) {
       const key = String(err?.message ?? err);
       ui.notifications.warn(game.i18n.has(key) ? t(key) : key);
@@ -951,6 +1032,9 @@ export class RequestWindow extends ApplicationV2 {
     await game.settings.set(MODULE_ID, "lastRequest", {rolls, formula, label, autoRollNpcs});
     const recent = [...rolls.filter(id => id !== "formula:"), ...this.#recent()];
     await game.settings.set(MODULE_ID, "recentRolls", [...new Set(recent)].slice(0, RECENT_LIMIT));
+    const mode = (create === createSecretRequest) ? "silent" : values.mode;
+    const name = this.#whatText({...input, mode});
+    await rememberRequest(recentRecord({rolls, actors, name, values: {...values, mode}}));
     this.close();
   }
 }

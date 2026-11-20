@@ -8,8 +8,8 @@ import {applyModuleLanguage} from "./language.mjs";
 import {openPrompt, refreshPrompt} from "./prompt-app.mjs";
 import {openRequestWindow} from "./request-app.mjs";
 import {publicResult} from "./request-model.mjs";
-import {createRequest, onCreateChatMessage, onUpdateAnswer, onUpdateChatMessage, openCards, rememberCard, requestOf,
-  resetEntry, scheduleCatchUp} from "./requests.mjs";
+import {createRequest, createSecretRequest, onCreateChatMessage, onUpdateAnswer, onUpdateChatMessage, openCards, rememberCard, requestOf,
+  recentRequests, repeatRequest, resetEntry, scheduleCatchUp} from "./requests.mjs";
 import {onDeleteChatMessage, onPreCreateChatMessage, rollEntry, rollRemaining} from "./rolling.mjs";
 import {noticeNewVersions, runSelfTest} from "./selftest.mjs";
 import {changeLanguage, registerGmSettings, registerSettings} from "./settings.mjs";
@@ -27,7 +27,7 @@ Hooks.once("init", () => {
   });
   // Counted only on the active GM's client, like every Sephral module
   registerUsage(MODULE_ID, {
-    features: ["request", "groupCheck", "formula", "gmRoll", "silent", "passive", "choice", "preset"],
+    features: ["request", "groupCheck", "formula", "gmRoll", "silent", "passive", "choice", "preset", "gmRollAll", "requestRepeated"],
     settings: ["theme", "promptWindow", "promptSound", "gmFastForward"]
   });
   game.keybindings.register(MODULE_ID, "openRequest", {
@@ -63,6 +63,12 @@ Hooks.once("init", () => {
   game.modules.get(MODULE_ID).api = {
     /** Ask for rolls (GM): {actors, type, key, choices, formula, label, dc, showDc, mode, advantage, group, groupRule, autoRollNpcs, note}. */
     request: createRequest,
+    /** Roll secretly for everyone at once (GM): like `request` with mode "silent", the card is whispered to the GMs. */
+    rollSecretly: createSecretRequest,
+    /** Send a recent request again (GM): 0 is the last one, up to 7. Returns its card or null. */
+    repeat: index => repeatRequest(index ?? 0),
+    /** The requests of this GM to send again, newest first: {name, rolls, values, actors}. */
+    recentRequests: () => recentRequests().map(r => foundry.utils.deepClone(r)),
     /** Open the request window (GM), optionally with values and actors to start with. */
     openDialog: openRequestWindow,
     /** Open the roll window of this player. */

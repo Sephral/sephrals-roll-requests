@@ -1,6 +1,6 @@
 /**
  * Pathfinder 2e: perception, saving throws and skills through the actor's statistics, with the four degrees of
- * success. Fortune and misfortune stand in for advantage and disadvantage.
+ * success. Fortune and misfortune stand in for advantage and disadvantage. Starfinder 2e (`sf2e`) uses this adapter too.
  */
 
 import {judge} from "../request-model.mjs";
@@ -25,6 +25,30 @@ const LOOKS = {
  */
 function option(key, label) {
   return {key, label, icon: LOOKS[key]?.[0] ?? null, tint: LOOKS[key]?.[1] ?? null};
+}
+
+/**
+ * The check context of a roll message. Starfinder 2e (system id `sf2e`) runs on the Pathfinder 2e engine and may keep
+ * it under its own flag scope, so both scopes are read, the running system's first.
+ * @param {object} message
+ * @param {string} [systemId]
+ * @returns {object|undefined}
+ */
+export function checkContext(message, systemId=globalThis.game?.system?.id) {
+  const scopes = (systemId === "sf2e") ? ["sf2e", "pf2e"] : ["pf2e", "sf2e"];
+  for ( const scope of scopes ) {
+    const context = message?.flags?.[scope]?.context;
+    if ( context ) return context;
+  }
+  return undefined;
+}
+
+/**
+ * The configuration object of the engine: `CONFIG.PF2E`, Starfinder 2e may also offer `CONFIG.SF2E`.
+ * @returns {object|undefined}
+ */
+function engineConfig() {
+  return globalThis.CONFIG?.PF2E ?? globalThis.CONFIG?.SF2E;
 }
 
 /**
@@ -77,7 +101,7 @@ export const pf2e = {
 
   /** @returns {object[]} */
   groups() {
-    return pf2eGroups(CONFIG.PF2E);
+    return pf2eGroups(engineConfig());
   },
 
   /**
@@ -111,7 +135,7 @@ export const pf2e = {
    */
   matches(message, request) {
     if ( request.type === "formula" ) return null;
-    const domains = message?.flags?.pf2e?.context?.domains;
+    const domains = checkContext(message)?.domains;
     return Array.isArray(domains) ? domains.includes(request.key) : null;
   },
 
@@ -124,7 +148,7 @@ export const pf2e = {
     const {roll, total} = firstTotal(message);
     const natural = naturalD20(roll);
     // PF2e decides the degree itself when it knew the DC (feats like Juggernaut change it)
-    const context = message?.flags?.pf2e?.context;
+    const context = checkContext(message);
     const outcome = (context?.dc?.value === request.dc) ? context?.outcome ?? null : null;
     return {total, natural, ...judge({total, natural}, request.dc, "pf2e", {outcome})};
   }

@@ -177,7 +177,7 @@ export function onPreCreateChatMessage(message, data, options, userId) {
   if ( userId !== game.user.id ) return;
   if ( !message.rolls?.length || message.flags?.[MODULE_ID]?.request || message.flags?.[MODULE_ID]?.answer ) return;
   // A roll that calls itself a reroll (PF2e marks the new roll and its context)
-  const reroll = message.rolls.some(r => r?.options?.isReroll) || !!message.flags?.pf2e?.context?.isReroll;
+  const reroll = message.rolls.some(r => r?.options?.isReroll) || !!(message.flags?.pf2e?.context?.isReroll || message.flags?.sf2e?.context?.isReroll);
   if ( replaced.length && reroll ) {
     let actor = null;
     try {

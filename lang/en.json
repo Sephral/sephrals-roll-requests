@@ -89,7 +89,18 @@
         "many": "Compare {count} characters: {what}"
       },
       "presetSave": "Save as preset",
-      "presetRemove": "Delete preset"
+      "presetRemove": "Delete preset",
+      "secretAll": {
+        "one": "Roll secretly for {count} character",
+        "many": "Roll secretly for all {count} characters"
+      },
+      "secretAllHint": "You roll for everyone now. Players get no prompt and see nothing, the card is yours alone.",
+      "repeat": "Repeat last request",
+      "repeatNone": "No request to repeat yet.",
+      "repeatHint": "Send again: {what}",
+      "recent": "Sent lately",
+      "repeatNoActors": "None of the characters of that request exist any more.",
+      "recentRemove": "Forget this request"
     },
     "Section": {
       "save": "Save",

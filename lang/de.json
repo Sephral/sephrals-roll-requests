@@ -89,7 +89,18 @@
         "many": "{count} Charaktere vergleichen: {what}"
       },
       "presetSave": "Als Vorlage speichern",
-      "presetRemove": "Vorlage löschen"
+      "presetRemove": "Vorlage löschen",
+      "secretAll": {
+        "one": "Heimlich für {count} Charakter würfeln",
+        "many": "Heimlich für alle {count} Charaktere würfeln"
+      },
+      "secretAllHint": "Du würfelst jetzt für alle. Die Spieler bekommen keine Aufforderung und sehen nichts, die Karte gehört nur dir.",
+      "repeat": "Letzte Anfrage wiederholen",
+      "repeatNone": "Es gibt noch keine Anfrage zum Wiederholen.",
+      "repeatHint": "Noch einmal senden: {what}",
+      "recent": "Zuletzt gesendet",
+      "repeatNoActors": "Keiner der Charaktere dieser Anfrage existiert noch.",
+      "recentRemove": "Diese Anfrage vergessen"
     },
     "Section": {
       "save": "Rettung",

@@ -11,7 +11,8 @@ import {pf2e} from "./pf2e.mjs";
 import {swade} from "./swade.mjs";
 
 /** Every system adapter by system id. */
-export const ADAPTERS = {dnd5e, pf2e, swade, crucible};
+/** Starfinder 2e is built on the Pathfinder 2e engine and shares its adapter. */
+export const ADAPTERS = {dnd5e, pf2e, sf2e: pf2e, swade, crucible};
 
 /** The adapter for any other system: formula rolls only. */
 export const generic = {
