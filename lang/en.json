@@ -34,6 +34,10 @@
         "hint": "Shows the request button in the token controls on the left."
       }
     },
+    "Hud": {
+      "button": "Ask for a roll",
+      "entry": "Ask for a roll"
+    },
     "Keys": {
       "openRequest": "Request rolls",
       "openRequestHint": "Opens the request window (GM).",
@@ -110,13 +114,15 @@
       "attribute": "Attributes",
       "combat": "Combat",
       "passive": "Passive",
-      "formula": "Formula"
+      "formula": "Formula",
+      "flat": "Flat check"
     },
     "Roll": {
       "initiative": "Initiative",
       "death": "Death save",
       "concentration": "Concentration",
-      "hitDie": "Hit die"
+      "hitDie": "Hit die",
+      "flat": "Flat check"
     },
     "ToolTab": {
       "kits": "Kits",
@@ -158,6 +164,7 @@
       "tool": "Tools",
       "attribute": "Attributes",
       "formula": "Own formula",
+      "flat": "Flat checks",
       "combat": "Combat and rest",
       "passive": "Passive values"
     },

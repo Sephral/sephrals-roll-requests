@@ -1,6 +1,7 @@
 import {getAdapter, rollGroups} from "./adapters/index.mjs";
 import {HOOKS, MODULE_ID, TESTED_VERSIONS, isShown, setting, t} from "./config.mjs";
 import {registerDebug} from "./debug.mjs";
+import {onActorContextOptions, onRenderTokenHUD} from "./entry-points.mjs";
 import {saveDebugFile} from "./debug-file.mjs";
 import {registerHubModule} from "./hub.mjs";
 import {renderCard} from "./card.mjs";
@@ -27,7 +28,7 @@ Hooks.once("init", () => {
   });
   // Counted only on the active GM's client, like every Sephral module
   registerUsage(MODULE_ID, {
-    features: ["request", "groupCheck", "formula", "gmRoll", "silent", "passive", "choice", "preset", "gmRollAll", "requestRepeated"],
+    features: ["request", "groupCheck", "formula", "gmRoll", "silent", "passive", "choice", "preset", "gmRollAll", "requestRepeated", "requestFromHud", "requestFromDirectory"],
     settings: ["theme", "promptWindow", "promptSound", "gmFastForward"]
   });
   game.keybindings.register(MODULE_ID, "openRequest", {
@@ -50,6 +51,8 @@ Hooks.once("init", () => {
   });
   registerDebug({adapter: () => getAdapter(), requestOf, openCards});
   Hooks.on("getSceneControlButtons", onGetSceneControlButtons);
+  Hooks.on("renderTokenHUD", onRenderTokenHUD);
+  Hooks.on("getActorContextOptions", onActorContextOptions);
   Hooks.on("renderChatMessageHTML", renderCard);
   Hooks.on("preCreateChatMessage", onPreCreateChatMessage);
   Hooks.on("createChatMessage", onCreate);

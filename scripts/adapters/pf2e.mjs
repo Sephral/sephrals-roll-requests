@@ -61,7 +61,8 @@ export function pf2eGroups(config) {
   const skills = Object.entries(config?.skills ?? {}).map(([key, s]) => option(key, loc(s?.label ?? s)));
   return [
     {type: "save", icon: "fa-shield-halved", cols: 3, options: saves},
-    {type: "skill", icon: "fa-star", cols: 3, options: [option("perception", loc("PF2E.PerceptionLabel")), ...sortByLabel(skills)]}
+    {type: "skill", icon: "fa-star", cols: 3, options: [option("perception", loc("PF2E.PerceptionLabel")), ...sortByLabel(skills)]},
+    {type: "flat", icon: "fa-dice-d20", cols: 3, options: [{key: "flat", label: loc("SRR.Roll.flat"), icon: "fa-dice-d20", tint: null}]}
   ].filter(group => group.options.length);
 }
 
@@ -81,6 +82,17 @@ export function pf2eRollArgs(request, {event=null, fastForward=false}={}) {
   if ( fastForward ) args.skipDialog = true;
   else if ( event ) args.event = event;
   return args;
+}
+
+/**
+ * The formula of a flat check: one d20 without modifiers, two with fortune or misfortune.
+ * @param {{advantage?: string}} request
+ * @returns {string}
+ */
+export function flatFormula(request) {
+  if ( request.advantage === "advantage" ) return "2d20kh";
+  if ( request.advantage === "disadvantage" ) return "2d20kl";
+  return "1d20";
 }
 
 /** The PF2e adapter. */
@@ -120,6 +132,7 @@ export const pf2e = {
    */
   async roll(actor, request, options={}) {
     if ( request.type === "formula" ) return rollFormula(actor, request, options);
+    if ( request.type === "flat" ) return rollFormula(actor, {...request, formula: flatFormula(request), label: loc("SRR.Roll.flat")}, options);
     const statistic = actor.getStatistic?.(request.key)
       ?? (request.type === "save" ? actor.saves?.[request.key] : actor.skills?.[request.key]);
     if ( !statistic?.roll ) throw new Error(`${actor.name} has no ${request.key}`);
@@ -134,7 +147,7 @@ export const pf2e = {
    * @returns {boolean|null}
    */
   matches(message, request) {
-    if ( request.type === "formula" ) return null;
+    if ( ["formula", "flat"].includes(request.type) ) return null;
     const domains = checkContext(message)?.domains;
     return Array.isArray(domains) ? domains.includes(request.key) : null;
   },
@@ -147,6 +160,8 @@ export const pf2e = {
   evaluate(message, request) {
     const {roll, total} = firstTotal(message);
     const natural = naturalD20(roll);
+    // A flat check has two outcomes: a natural 20 or 1 does not move it, and 10 above the DC is nothing special
+    if ( request.type === "flat" ) return {total, natural, ...judge({total, natural}, request.dc, "d20")};
     // PF2e decides the degree itself when it knew the DC (feats like Juggernaut change it)
     const context = checkContext(message);
     const outcome = (context?.dc?.value === request.dc) ? context?.outcome ?? null : null;

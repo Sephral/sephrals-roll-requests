@@ -6,7 +6,7 @@ Roll Requests lets the GM ask a group of characters for the same roll. Each requ
 
 ### Making a request
 
-Open the request window with the d20 in the token controls, with Alt+R, or from a macro. Every roll of your game system is a button on the left, who rolls and how stand on the right, and the button at the bottom says what will happen.
+Open the request window with the d20 in the token controls, with Alt+R, or from a macro. The token HUD has a d20 button too (the window starts with that token, or with all selected tokens when you click one of several), and the context menu of an actor in the Actors directory has the entry *Ask for a roll* (starts with that actor). Every roll of your game system is a button on the left, who rolls and how stand on the right, and the button at the bottom says what will happen.
 
 The window starts with your last roll. DC, advantage, results, group and note start fresh, so a secret request never carries over into the next one by accident.
 
@@ -55,7 +55,7 @@ What you see on the card depends on the request: in public requests every total,
 | System | Rolls |
 | --- | --- |
 | D&D 5e (5.x and 6.x) | Saving throws, ability checks, skills, tools |
-| Pathfinder 2e, Starfinder 2e | Perception, saving throws, skills (lore skills with an own formula such as `1d20 + @actor.skills.warfare-lore.mod`) |
+| Pathfinder 2e, Starfinder 2e | Perception, saving throws, skills (lore skills with an own formula such as `1d20 + @actor.skills.warfare-lore.mod`), flat checks (one d20 without modifiers, judged as success or failure only, a natural 20 or 1 changes nothing; fortune and misfortune roll two d20) |
 | Savage Worlds (SWADE) | Attributes, skills (the core skills and the skills of the characters). A character without the skill makes an unskilled attempt |
 | Crucible | Skills |
 | Any other system | Own formulas with the character's roll data |
@@ -91,7 +91,7 @@ The module can take part in a small usage report shared by all of Sephral’s mo
 With the GM’s consent only the active GM’s browser counts, and it sends at most one report a day. The counts are kept in a hidden world setting, so all browsers and computers of the GM count together, and turning the statistics off deletes them. A copy of a world gets its own world ID. The question lists everything the report contains, from the Foundry version to a random world ID. For Roll Requests it holds:
 
 * on how many of the last 30 days the module was used
-* how often the GM makes requests, group checks, silent requests, requests with an own formula, with a choice of rolls and for passive values, how often the GM uses a preset, rolls for a character, rolls secretly for all and sends a recent request again
+* how often the GM makes requests, group checks, silent requests, requests with an own formula, with a choice of rolls and for passive values, how often the GM uses a preset, rolls for a character, rolls secretly for all, sends a recent request again and opens the window from the token HUD or the Actors directory
 * the settings *Look*, *Open a roll window*, *Sound with a request* and *Your rolls skip the dialog* (only the chosen option)
 * where errors occur in the module code: file, line, error type and whether the error arose in the module itself, in Foundry, in the game system or in another module, never the error message or the name of another module
 

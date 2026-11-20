@@ -4,7 +4,7 @@ import {firstTotal, naturalD20, rollsOf, sortByLabel} from "../scripts/adapters/
 import {crucible, crucibleGroups, crucibleRollArgs} from "../scripts/adapters/crucible.mjs";
 import {dnd5e, dnd5eGroups, dnd5eMessage, dnd5eRollArgs, dnd5eRollKind} from "../scripts/adapters/dnd5e.mjs";
 import {ADAPTERS, generic, getAdapter} from "../scripts/adapters/index.mjs";
-import {checkContext, pf2e, pf2eGroups, pf2eRollArgs} from "../scripts/adapters/pf2e.mjs";
+import {checkContext, flatFormula, pf2e, pf2eGroups, pf2eRollArgs} from "../scripts/adapters/pf2e.mjs";
 import {findSkill, swade, swadeGroups, swadeSlug} from "../scripts/adapters/swade.mjs";
 
 /** A roll as messages hold it: the dice with their results and the total. */
@@ -147,7 +147,8 @@ test("PF2e offers saves and skills with perception first", () => {
     saves: {fortitude: "PF2E.SavesFortitude", reflex: "PF2E.SavesReflex"},
     skills: {stealth: {label: "Stealth"}, acrobatics: {label: "Acrobatics"}, arcana: "Arcana"}
   });
-  assert.deepEqual(groups.map(g => g.type), ["save", "skill"]);
+  assert.deepEqual(groups.map(g => g.type), ["save", "skill", "flat"]);
+  assert.deepEqual(groups[2].options.map(o => o.key), ["flat"]);
   assert.deepEqual(groups[1].options.map(o => o.key), ["perception", "acrobatics", "arcana", "stealth"]);
 });
 
@@ -167,6 +168,21 @@ test("PF2e uses the system's degree when it knew the same DC", async () => {
   const actor = {getStatistic: key => (key === "will" ? statistic : null)};
   assert.deepEqual(await pf2e.roll(actor, {type: "save", key: "will", dc: null}, {fastForward: true}), {skipDialog: true});
   await assert.rejects(() => pf2e.roll({getStatistic: () => null, name: "X"}, {type: "skill", key: "lore"}));
+});
+
+test("a PF2e flat check has two outcomes and no modifiers", () => {
+  const flat = (total, natural, dc) => pf2e.evaluate(message([roll(total, [{result: natural}])]), {type: "flat", dc});
+  assert.equal(flat(20, 20, 11).degree, "success");
+  assert.equal(flat(1, 1, 5).degree, "failure");
+  assert.equal(flat(1, 1, 5).success, false);
+  assert.equal(flat(11, 11, 11).success, true);
+  assert.equal(flat(10, 10, 11).degree, "failure");
+  // The same rolls as a formula keep the four degrees of a check
+  assert.equal(pf2e.evaluate(message([roll(20, [{result: 20}])]), {type: "formula", dc: 11}).degree, "criticalSuccess");
+  assert.equal(flatFormula({}), "1d20");
+  assert.equal(flatFormula({advantage: "advantage"}), "2d20kh");
+  assert.equal(flatFormula({advantage: "disadvantage"}), "2d20kl");
+  assert.equal(pf2e.matches({flags: {pf2e: {context: {domains: ["flat-check"]}}}}, {type: "flat", key: "flat"}), null);
 });
 
 test("SWADE offers attributes and the core and own skills", () => {

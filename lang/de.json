@@ -34,6 +34,10 @@
         "hint": "Zeigt den Knopf für Anforderungen in der Token-Leiste links."
       }
     },
+    "Hud": {
+      "button": "Wurf anfordern",
+      "entry": "Wurf anfordern"
+    },
     "Keys": {
       "openRequest": "Würfe anfordern",
       "openRequestHint": "Öffnet das Anforderungsfenster (SL).",
@@ -110,13 +114,15 @@
       "attribute": "Attribut",
       "combat": "Kampf",
       "passive": "Passiv",
-      "formula": "Formel"
+      "formula": "Formel",
+      "flat": "Einfache Probe"
     },
     "Roll": {
       "initiative": "Initiative",
       "death": "Todesrettung",
       "concentration": "Konzentration",
-      "hitDie": "Trefferwürfel"
+      "hitDie": "Trefferwürfel",
+      "flat": "Einfache Probe"
     },
     "ToolTab": {
       "kits": "Kits",
@@ -158,6 +164,7 @@
       "tool": "Werkzeuge",
       "attribute": "Attribute",
       "formula": "Eigene Formel",
+      "flat": "Einfache Proben",
       "combat": "Kampf und Rast",
       "passive": "Passive Werte"
     },
