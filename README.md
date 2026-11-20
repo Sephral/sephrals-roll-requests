@@ -10,12 +10,12 @@
 
 ## Highlights
 
-* **Ask anyone:** the characters of the scene, your party, the selected tokens or any actor you drag in. Alt+R opens it.
+* **Ask anyone:** the characters of the scene, your party, the selected tokens or any actor you drag in. Alt+R opens it, the token HUD asks for a roll too, and *Add player* brings in anyone else.
 * **Every roll one click away:** saves, checks, skills and tools as buttons, with initiative, death saves and your own formula. Type a few letters to find one, or save a preset.
 * **One click for players:** a small window and the chat card show a roll button for each character. The roll is the system's own, with its dialog and bonuses.
 * **One live card:** totals, pass or fail against the DC and “3 of 4 passed” at a glance, filled in while your players roll. Natural 20s and 1s stand out.
 * **Let them choose:** mark Athletics and Acrobatics and each player picks one.
-* **Secret when you want it:** hide the DC, keep the results for your eyes only, let nobody see their own roll, or roll silently so the players never notice.
+* **Secret when you want it:** hide the DC, keep the results for your eyes only, let nobody see their own roll, or roll silently so the players never notice. One click rolls secretly for all chosen characters, and recent requests can be sent again.
 * **Planned checks:** prepare "Perception DC 15, everyone in the scene, secret" ahead of time, send it with one click, or let a Region send it when a token walks in.
 * **Passive values:** compare passive Perception in D&D 5e without a roll, on a card only you see.
 * **Group checks:** half of the group, all of them or just one has to succeed, worked out for you.
