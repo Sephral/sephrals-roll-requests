@@ -421,7 +421,23 @@
 /* The two columns */
 .srr-rq-panes {
   display: flex;
+  flex: 1 1 auto;
   min-height: 0;
+  /* grows with the roll list, stops at the screen: the window itself is not taller than the screen */
+  max-height: calc(100vh - 215px);
+}
+
+.srr-rq-panes ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.srr-rq-panes ::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--srr-muted) 55%, transparent);
+  border-radius: 3px;
+}
+
+.srr-rq-panes ::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .srr-rq-rolls {
@@ -430,9 +446,10 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  height: 470px;
   padding: 8px 10px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--srr-muted) 55%, transparent) transparent;
 }
 
 .srr-rq-side {
@@ -441,10 +458,11 @@
   display: flex;
   flex-direction: column;
   gap: 7px;
-  height: 470px;
   padding: 8px 10px;
   border-left: 1px solid var(--srr-line);
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--srr-muted) 55%, transparent) transparent;
 }
 
 .srr-rollgroup {
@@ -535,16 +553,60 @@
 .srr-chip i.srr-tint-wis { color: var(--srr-tint-wis); }
 .srr-chip i.srr-tint-cha { color: var(--srr-tint-cha); }
 
-.srr-rq .srr-rollbtn.is-on,
-.srr-rq .srr-dc-chips button.is-on,
-.srr-rq .srr-tabs button.is-on {
+/* Three kinds of "chosen", so the eye finds the roll at once:
+   - the roll that will be asked for: filled with the accent colour, bold, with a check mark
+   - a DC chip: outlined in the accent colour on a light tint
+   - an option of a switch (roll mode, results, group, tool group, who): a raised light pill on the grey track, like a
+     switch on a device, with accent coloured text */
+.srr-rq .srr-rollbtn.is-on {
   color: var(--srr-on-accent);
   background: var(--srr-accent);
   border-color: var(--srr-accent);
+  font-weight: 700;
+  box-shadow: 0 0 0 2px var(--srr-accent-soft), 0 2px 6px rgb(0 0 0 / 0.25);
 }
 
 .srr-rq .srr-rollbtn.is-on > i {
   color: inherit;
+}
+
+.srr-rq .srr-rollbtn.is-on {
+  position: relative;
+  overflow: visible;
+}
+
+/* The check mark sits on the corner, so narrow buttons keep their layout */
+.srr-rq .srr-rollbtn.is-on::after {
+  content: "\f00c";
+  position: absolute;
+  top: -6px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  color: var(--srr-accent);
+  background: var(--srr-paper);
+  border: 1.5px solid var(--srr-accent);
+  font-family: var(--font-awesome, "Font Awesome 6 Pro"), "Font Awesome 6 Free";
+  font-weight: 900;
+  font-size: 7px;
+  line-height: 1;
+}
+
+.srr-rq .srr-dc-chips button.is-on {
+  color: var(--srr-accent);
+  background: var(--srr-accent-soft);
+  border-color: var(--srr-accent);
+  font-weight: 700;
+}
+
+.srr-rq .srr-tabs button.is-on {
+  color: var(--srr-accent);
+  background: var(--srr-field);
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.28), inset 0 0 0 1px var(--srr-line);
 }
 
 .srr-formula {
@@ -691,17 +753,99 @@
   font-size: 10.5px;
 }
 
-.srr-drop {
+.srr-rq .srr-drop {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  height: 26px;
+  gap: 5px;
+  width: 100%;
+  height: 28px;
   margin: 0;
+  padding: 0 8px;
   border: 1px dashed var(--srr-line-strong);
   border-radius: 14px;
-  color: var(--srr-muted);
+  background: transparent;
+  color: var(--srr-accent);
   font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.srr-rq .srr-drop:hover {
+  background: var(--srr-accent-soft);
+  border-color: var(--srr-accent);
+}
+
+/* The picker of "Add player" */
+.srr-picker {
+  gap: 8px;
+  padding: 10px;
+}
+
+.srr-picker .srr-pick-filter {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.srr-picker .srr-pick-list {
+  max-height: 340px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--srr-muted) 55%, transparent) transparent;
+}
+
+.srr-picker h4 {
+  margin: 8px 0 3px;
+  border: none;
+  color: var(--srr-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.srr-picker .srr-pick-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 5px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.srr-picker .srr-pick-row:hover {
+  background: var(--srr-soft);
+}
+
+.srr-picker .srr-pick-row img {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.srr-picker .srr-pick-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.srr-picker .srr-pick-owner {
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--srr-muted);
+  font-size: 11px;
+}
+
+.srr-picker .is-hidden {
+  display: none;
 }
 
 .srr-dc {
@@ -801,17 +945,25 @@
 
 .srr-rq-foot {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
+  flex-direction: column;
+  gap: 7px;
+  padding: 8px 10px;
   border-top: 1px solid var(--srr-line);
 }
 
+.srr-foot-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
 .srr-rq .srr-planned-save,
-.srr-rq .srr-preset-save {
+.srr-rq .srr-preset-save,
+.srr-rq .srr-repeat-last {
   flex: none;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border-radius: 6px;
   color: var(--srr-accent);
@@ -819,26 +971,74 @@
 
 .srr-rq-hint {
   flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
   min-width: 0;
   color: var(--srr-muted);
   font-size: 12px;
+  text-align: right;
+}
+
+.srr-rq-hint > i {
+  flex: none;
+}
+
+.srr-rq-hint > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.srr-foot-send {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.srr-rq .srr-foot-send button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  height: 38px;
+  margin: 0;
+  padding: 0 14px;
+  box-sizing: border-box;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.srr-rq .srr-foot-send button > i {
+  flex: none;
+}
+
+.srr-rq .srr-foot-send button > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.srr-rq .srr-secret-all {
+  flex: 1 1 0;
+}
+
+.srr-rq .srr-secret-all[hidden] {
+  display: none;
 }
 
 .srr-rq .srr-primary {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  max-width: 430px;
-  min-height: 36px;
-  padding: 3px 14px;
+  flex: 1.7 1 0;
   color: var(--srr-on-accent);
   background: var(--srr-accent);
   border: 1px solid var(--srr-accent);
   border-radius: 6px;
   font-size: 14px;
   font-weight: 600;
-  text-align: left;
 }
 
 .srr-rq .srr-primary:disabled {
@@ -923,29 +1123,7 @@
   color: var(--srr-muted);
 }
 
-.srr-rq .srr-repeat-last {
-  flex: none;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border-radius: 6px;
-  color: var(--srr-accent);
-}
-
-.srr-rq .srr-secret-all {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  max-width: 260px;
-  min-height: 36px;
-  padding: 3px 12px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  text-align: left;
-}
-
-.srr-rq .srr-secret-all[hidden] {
-  display: none;
+/* Narrower than this the roll buttons would have no room */
+#srr-request {
+  min-width: 560px;
 }

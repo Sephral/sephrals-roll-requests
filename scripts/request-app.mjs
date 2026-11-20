@@ -90,6 +90,7 @@ export class RequestWindow extends ApplicationV2 {
       srrScope: RequestWindow.#onScope,
       srrNone: RequestWindow.#onNone,
       srrRemove: RequestWindow.#onRemove,
+      srrAddPlayer: RequestWindow.#onAddPlayer,
       srrDcChip: RequestWindow.#onDcChip,
       srrDcShown: RequestWindow.#onDcShown,
       srrOption: RequestWindow.#onOption
@@ -400,7 +401,7 @@ export class RequestWindow extends ApplicationV2 {
       ${c.added ? `<button type="button" class="srr-icon" data-action="srrRemove" data-uuid="${esc(c.uuid)}"
         data-tooltip="${esc(t("SRR.Request.remove"))}" aria-label="${esc(t("SRR.Request.remove"))}"><i class="fa-solid fa-xmark" inert></i></button>` : ""}
       </div>`).join("");
-    return `${tiles}<p class="srr-drop" data-tooltip="${esc(t("SRR.Request.dropHint"))}">${iconHtml("fa-plus")}${esc(t("SRR.Request.drop"))}</p>`;
+    return `${tiles}<button type="button" class="srr-drop" data-action="srrAddPlayer" data-tooltip="${esc(t("SRR.Request.dropHint"))}">${iconHtml("fa-plus")}<span>${esc(t("SRR.Request.drop"))}</span></button>`;
   }
 
   /**
@@ -576,12 +577,16 @@ export class RequestWindow extends ApplicationV2 {
         </div>
       </div>
       <footer class="srr-rq-foot">
-        <button type="button" class="srr-preset-save" data-action="srrPresetSave" data-tooltip="${esc(t("SRR.Request.presetSave"))}" aria-label="${esc(t("SRR.Request.presetSave"))}"><i class="fa-solid fa-bookmark" inert></i></button>
-        <button type="button" class="srr-planned-save" data-action="srrPlannedSave"><i class="fa-solid fa-calendar-plus" inert></i></button>
-        <button type="button" class="srr-repeat-last" data-action="srrRepeat" data-index="0" data-tooltip="${esc(t("SRR.Request.repeat"))}" aria-label="${esc(t("SRR.Request.repeat"))}"><i class="fa-solid fa-rotate-right" inert></i></button>
-        <span class="srr-rq-hint">${esc(t("SRR.Request.choiceHint"))}</span>
-        <button type="button" class="srr-secret-all" data-action="srrSecretAll" data-tooltip="${esc(t("SRR.Request.secretAllHint"))}"><i class="fa-solid fa-user-secret" inert></i> <span class="srr-secret-text"></span></button>
-        <button type="submit" class="srr-primary"><i class="fa-solid fa-paper-plane" inert></i> <span class="srr-send"></span></button>
+        <div class="srr-foot-tools">
+          <button type="button" class="srr-preset-save" data-action="srrPresetSave" data-tooltip="${esc(t("SRR.Request.presetSave"))}" aria-label="${esc(t("SRR.Request.presetSave"))}"><i class="fa-solid fa-bookmark" inert></i></button>
+          <button type="button" class="srr-planned-save" data-action="srrPlannedSave"><i class="fa-solid fa-calendar-plus" inert></i></button>
+          <button type="button" class="srr-repeat-last" data-action="srrRepeat" data-index="0" data-tooltip="${esc(t("SRR.Request.repeat"))}" aria-label="${esc(t("SRR.Request.repeat"))}"><i class="fa-solid fa-rotate-right" inert></i></button>
+          <span class="srr-rq-hint" data-tooltip="${esc(t("SRR.Request.choiceHint"))}">${iconHtml("fa-circle-info")}<span>${esc(t("SRR.Request.choiceHint"))}</span></span>
+        </div>
+        <div class="srr-foot-send">
+          <button type="button" class="srr-secret-all" data-action="srrSecretAll" data-tooltip="${esc(t("SRR.Request.secretAllHint"))}"><i class="fa-solid fa-user-secret" inert></i><span class="srr-secret-text"></span></button>
+          <button type="submit" class="srr-primary"><i class="fa-solid fa-paper-plane" inert></i><span class="srr-send"></span></button>
+        </div>
       </footer></div>`;
   }
 
@@ -656,7 +661,10 @@ export class RequestWindow extends ApplicationV2 {
     const hint = form.querySelector(".srr-mode-hint");
     if ( hint ) hint.textContent = t(passive ? "SRR.Mode.passiveHint" : `SRR.Mode.${values.mode}Hint`);
     const send = form.querySelector(".srr-send");
-    if ( send ) send.textContent = this.#sendLabel();
+    if ( send ) {
+      send.textContent = this.#sendLabel();
+      send.parentElement.dataset.tooltip = send.textContent;
+    }
     form.querySelector(".srr-primary")?.toggleAttribute("disabled", !this.#picked.size);
     const secret = form.querySelector(".srr-secret-all");
     if ( secret ) {
@@ -664,7 +672,10 @@ export class RequestWindow extends ApplicationV2 {
       secret.toggleAttribute("disabled", !count || passive);
       secret.hidden = passive;
       const text = secret.querySelector(".srr-secret-text");
-      if ( text ) text.textContent = t(`SRR.Request.secretAll.${count === 1 ? "one" : "many"}`, {count});
+      if ( text ) {
+        text.textContent = t(`SRR.Request.secretAll.${count === 1 ? "one" : "many"}`, {count});
+        secret.dataset.tooltip = `${text.textContent}. ${t("SRR.Request.secretAllHint")}`;
+      }
     }
     form.querySelector(".srr-repeat-last")?.toggleAttribute("disabled", !recentRequests().length);
     const plan = form.querySelector(".srr-planned-save");
@@ -979,6 +990,70 @@ export class RequestWindow extends ApplicationV2 {
    */
   static #onNone() {
     this.#picked.clear();
+    this.#drawWho();
+  }
+
+  /**
+   * Open the list of actors that are not in the window yet and add the ticked ones, like a drop does.
+   * @this {RequestWindow}
+   */
+  static async #onAddPlayer() {
+    const inList = new Set(this.#candidates().map(c => fromUuidQuiet(c.uuid)).map(doc => (doc?.actor ?? doc)?.uuid).filter(Boolean));
+    const rows = (game.actors?.contents ?? []).filter(actor => !inList.has(actor.uuid) && actor.testUserPermission(game.user, "OBSERVER"))
+      .map(actor => ({uuid: actor.uuid, name: actor.name, img: actor.img, owners: playerOwners(actor).map(user => user.name).join(", ")}));
+    rows.sort((a, b) => a.name.localeCompare(b.name, game.i18n.lang));
+    const heroes = rows.filter(row => row.owners);
+    const others = rows.filter(row => !row.owners);
+    const list = (title, items) => items.length ? `<h4>${esc(title)}</h4>${items.map(row => `<label class="srr-pick-row" data-search="${esc(searchText(`${row.name} ${row.owners}`))}">
+      <input type="checkbox" name="pick" value="${esc(row.uuid)}"><img src="${esc(row.img || "icons/svg/mystery-man.svg")}" alt="">
+      <span class="srr-pick-name">${esc(row.name)}</span><span class="srr-pick-owner">${esc(row.owners)}</span></label>`).join("")}` : "";
+    const body = rows.length ? `<input type="search" class="srr-pick-filter" placeholder="${esc(t("SRR.Request.addPlayerFilter"))}" aria-label="${esc(t("SRR.Request.addPlayerFilter"))}" autofocus>
+      <div class="srr-pick-list">${list(t("SRR.Request.addPlayerHeroes"), heroes)}${list(t("SRR.Request.addPlayerOthers"), others)}
+      <p class="srr-empty srr-pick-none is-hidden">${esc(t("SRR.Request.addPlayerNone"))}</p></div>`
+      : `<p class="srr-empty">${esc(t("SRR.Request.addPlayerEmpty"))}</p>`;
+    let uuids;
+    try {
+      uuids = await foundry.applications.api.DialogV2.prompt({
+        classes: ["srr-app", "srr-picker-dialog"],
+        window: {title: t("SRR.Request.drop"), icon: "fa-solid fa-user-plus"},
+        position: {width: 380},
+        content: `<div class="srr-body srr-rq srr-picker" data-srr-theme="${esc(setting("theme"))}">${body}</div>`,
+        rejectClose: false,
+        render: (event, dialog) => {
+          const root = dialog.element;
+          const filter = root.querySelector(".srr-pick-filter");
+          filter?.addEventListener("input", () => {
+            const words = searchText(filter.value).split(/\s+/).filter(Boolean);
+            let shown = 0;
+            for ( const row of root.querySelectorAll(".srr-pick-row") ) {
+              const on = words.every(word => row.dataset.search.includes(word));
+              row.classList.toggle("is-hidden", !on);
+              shown += on ? 1 : 0;
+            }
+            for ( const head of root.querySelectorAll(".srr-picker h4") ) {
+              let next = head.nextElementSibling;
+              let any = false;
+              while ( next?.classList.contains("srr-pick-row") ) {
+                any ||= !next.classList.contains("is-hidden");
+                next = next.nextElementSibling;
+              }
+              head.classList.toggle("is-hidden", !any);
+            }
+            root.querySelector(".srr-pick-none")?.classList.toggle("is-hidden", shown > 0);
+          });
+        },
+        ok: {label: t("SRR.Request.addPlayerOk"), callback: (event, button) =>
+          [...button.form.querySelectorAll("input[name=pick]:checked")].map(input => input.value)}
+      });
+    } catch {
+      return;
+    }
+    if ( !uuids?.length ) return;
+    for ( const uuid of uuids ) {
+      this.#extra.add(uuid);
+      this.#picked.add(uuid);
+    }
+    countFeature(MODULE_ID, "addPlayerPicked", uuids.length);
     this.#drawWho();
   }
 

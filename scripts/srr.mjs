@@ -29,7 +29,7 @@ Hooks.once("init", () => {
   });
   // Counted only on the active GM's client, like every Sephral module
   registerUsage(MODULE_ID, {
-    features: ["request", "groupCheck", "formula", "gmRoll", "silent", "passive", "choice", "preset", "gmRollAll", "requestRepeated", "requestFromHud", "requestFromDirectory", "plannedCreated", "plannedSent", "plannedRegion"],
+    features: ["request", "groupCheck", "formula", "gmRoll", "silent", "passive", "choice", "preset", "gmRollAll", "requestRepeated", "requestFromHud", "requestFromDirectory", "plannedCreated", "plannedSent", "plannedRegion", "addPlayerPicked"],
     settings: ["theme", "promptWindow", "promptSound", "gmFastForward"]
   });
   game.keybindings.register(MODULE_ID, "openRequest", {
