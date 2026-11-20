@@ -1,6 +1,7 @@
 import {getAdapter, rollGroups} from "./adapters/index.mjs";
 import {HOOKS, MODULE_ID, TESTED_VERSIONS, isShown, setting, t} from "./config.mjs";
 import {registerDebug} from "./debug.mjs";
+import {onRenderBehaviorConfig, planned, createPlanned, editPlanned, deletePlanned, sendPlanned, registerBehavior} from "./planned.mjs";
 import {onActorContextOptions, onRenderTokenHUD} from "./entry-points.mjs";
 import {saveDebugFile} from "./debug-file.mjs";
 import {registerHubModule} from "./hub.mjs";
@@ -28,7 +29,7 @@ Hooks.once("init", () => {
   });
   // Counted only on the active GM's client, like every Sephral module
   registerUsage(MODULE_ID, {
-    features: ["request", "groupCheck", "formula", "gmRoll", "silent", "passive", "choice", "preset", "gmRollAll", "requestRepeated", "requestFromHud", "requestFromDirectory"],
+    features: ["request", "groupCheck", "formula", "gmRoll", "silent", "passive", "choice", "preset", "gmRollAll", "requestRepeated", "requestFromHud", "requestFromDirectory", "plannedCreated", "plannedSent", "plannedRegion"],
     settings: ["theme", "promptWindow", "promptSound", "gmFastForward"]
   });
   game.keybindings.register(MODULE_ID, "openRequest", {
@@ -50,6 +51,14 @@ Hooks.once("init", () => {
     }
   });
   registerDebug({adapter: () => getAdapter(), requestOf, openCards});
+  registerBehavior();
+  Hooks.on("renderRegionBehaviorConfig", onRenderBehaviorConfig);
+  Hooks.on("updateScene", (scene, changes) => {
+    if ( foundry.utils.hasProperty(changes, `flags.${MODULE_ID}.planned`) || foundry.utils.hasProperty(changes, `flags.${MODULE_ID}.-=planned`) ) {
+      foundry.applications.instances.get("srr-request")?.drawPlanned?.();
+    }
+  });
+  Hooks.on("canvasReady", () => foundry.applications.instances.get("srr-request")?.drawPlanned?.());
   Hooks.on("getSceneControlButtons", onGetSceneControlButtons);
   Hooks.on("renderTokenHUD", onRenderTokenHUD);
   Hooks.on("getActorContextOptions", onActorContextOptions);
@@ -72,6 +81,14 @@ Hooks.once("init", () => {
     repeat: index => repeatRequest(index ?? 0),
     /** The requests of this GM to send again, newest first: {name, rolls, values, actors}. */
     recentRequests: () => recentRequests().map(r => foundry.utils.deepClone(r)),
+    /** Checks planned for a scene (GM): list, create, edit, delete and send. A check is {rolls, values, label, who, after}. */
+    planned: {
+      list: scene => planned(scene).map(r => foundry.utils.deepClone(r)),
+      create: (scene, input) => createPlanned(scene, input),
+      update: (scene, id, patch) => editPlanned(scene, id, patch),
+      remove: (scene, id) => deletePlanned(scene, id),
+      send: (scene, id, options) => sendPlanned(scene, id, options)
+    },
     /** Open the request window (GM), optionally with values and actors to start with. */
     openDialog: openRequestWindow,
     /** Open the roll window of this player. */

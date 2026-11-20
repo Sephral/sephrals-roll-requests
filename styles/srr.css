@@ -807,6 +807,7 @@
   border-top: 1px solid var(--srr-line);
 }
 
+.srr-rq .srr-planned-save,
 .srr-rq .srr-preset-save {
   flex: none;
   width: 36px;
@@ -888,6 +889,16 @@
   border-bottom: 1px solid var(--srr-line);
 }
 
+.srr-rq-planned {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--srr-line);
+}
+
+.srr-rq-planned.is-hidden,
 .srr-rq-recent.is-hidden {
   display: none;
 }
@@ -897,6 +908,15 @@
   margin-right: 2px;
   color: var(--srr-muted);
   font-size: 12px;
+}
+
+.srr-chip.is-planned.is-done > button:first-child {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.srr-chip.is-planned .srr-chip-x[aria-pressed="true"] {
+  color: var(--srr-accent);
 }
 
 .srr-chip.is-recent > button:first-child > i {

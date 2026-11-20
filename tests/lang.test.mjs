@@ -92,7 +92,8 @@ test("every key used by scripts exists", async () => {
   }
   for ( const g of ["success", "failure"] ) used.add(`SRR.Card.group.${g}`);
   for ( const key of used ) if ( key.endsWith(".") ) used.delete(key);
-  const missing = [...used].filter(key => !enKeys.has(key));
+  // A namespace handed to a helper that adds the last part is no key of its own
+  const missing = [...used].filter(key => !enKeys.has(key) && ![...enKeys].some(k => k.startsWith(`${key}.`)));
   assert.deepEqual(missing, []);
 });
 

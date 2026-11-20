@@ -16,6 +16,7 @@
 * **One live card:** totals, pass or fail against the DC and “3 of 4 passed” at a glance, filled in while your players roll. Natural 20s and 1s stand out.
 * **Let them choose:** mark Athletics and Acrobatics and each player picks one.
 * **Secret when you want it:** hide the DC, keep the results for your eyes only, let nobody see their own roll, or roll silently so the players never notice.
+* **Planned checks:** prepare "Perception DC 15, everyone in the scene, secret" ahead of time, send it with one click, or let a Region send it when a token walks in.
 * **Passive values:** compare passive Perception in D&D 5e without a roll, on a card only you see.
 * **Group checks:** half of the group, all of them or just one has to succeed, worked out for you.
 * **NPCs roll themselves:** characters without a player roll at once, and one click rolls the rest for anyone who is away.

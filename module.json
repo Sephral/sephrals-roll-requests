@@ -31,5 +31,10 @@
       "name": "Deutsch",
       "path": "lang/de.json"
     }
-  ]
+  ],
+  "documentTypes": {
+    "RegionBehavior": {
+      "plannedCheck": {}
+    }
+  }
 }

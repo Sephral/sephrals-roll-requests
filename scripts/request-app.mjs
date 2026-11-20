@@ -7,6 +7,8 @@
 import {getAdapter, rollGroups} from "./adapters/index.mjs";
 import {MODULE_ID, addSettingsGear, esc, fromUuidQuiet, isShown, setting, t} from "./config.mjs";
 import {ADVANTAGE, CHOOSABLE, GROUP_RULES, MODES, parseRollId, recentRecord, rollId} from "./request-model.mjs";
+import {createPlanned, deletePlanned, editPlanned, planned, sendPlanned} from "./planned.mjs";
+import {PLANNED_AFTER, PLANNED_WHO, plannedText} from "./planned-model.mjs";
 import {createRequest, createSecretRequest, entriesFrom, playerOwners, recentRequests, rememberRequest,
   repeatRequest} from "./requests.mjs";
 import {countFeature} from "./usage.mjs";
@@ -78,6 +80,11 @@ export class RequestWindow extends ApplicationV2 {
       srrPresetSave: RequestWindow.#onPresetSave,
       srrRepeat: RequestWindow.#onRepeat,
       srrRecentRemove: RequestWindow.#onRecentRemove,
+      srrPlannedSave: RequestWindow.#onPlannedSave,
+      srrPlannedSend: RequestWindow.#onPlannedSend,
+      srrPlannedEdit: RequestWindow.#onPlannedEdit,
+      srrPlannedDone: RequestWindow.#onPlannedDone,
+      srrPlannedRemove: RequestWindow.#onPlannedRemove,
       srrSecretAll: RequestWindow.#onSecretAll,
       srrToolTab: RequestWindow.#onToolTab,
       srrScope: RequestWindow.#onScope,
@@ -112,6 +119,9 @@ export class RequestWindow extends ApplicationV2 {
 
   /** The roll groups of this drawing. */
   #groupCache = null;
+
+  /** The planned check that was loaded into the window, so a save changes it instead of adding another. */
+  #fromPlanned = null;
 
   /** @override */
   get title() {
@@ -446,6 +456,54 @@ export class RequestWindow extends ApplicationV2 {
     return `<span class="srr-recent-label">${iconHtml("fa-clock-rotate-left")} ${esc(t("SRR.Request.recent"))}</span>${chips}`;
   }
 
+  /**
+   * The bar of the checks planned for the viewed scene: a click sends one, a click with Shift, Ctrl or Alt loads it
+   * into the window for a last change.
+   * @returns {string}
+   */
+  #plannedHtml() {
+    const list = planned();
+    if ( !list.length ) return "";
+    const chips = list.map(record => {
+      const text = plannedText(record, this.#recordText(record));
+      const who = t(`SRR.Scope.${record.who}`);
+      const secret = record.values.mode === "silent";
+      const icon = record.done ? "fa-circle-check" : secret ? "fa-user-secret" : "fa-calendar-check";
+      const doneText = t(record.done ? "SRR.Planned.undone" : "SRR.Planned.done");
+      return `<span class="srr-chip is-planned${record.done ? " is-done" : ""}" data-planned="${esc(record.id)}"><button type="button" data-action="srrPlannedSend" data-id="${esc(record.id)}"
+        data-tooltip="${esc(t("SRR.Planned.sendHint", {what: text, who}))}">${iconHtml(icon)}<span>${esc(text)}</span></button>
+        <button type="button" class="srr-chip-x" data-action="srrPlannedDone" data-id="${esc(record.id)}" aria-pressed="${record.done}"
+          aria-label="${esc(doneText)}" data-tooltip="${esc(doneText)}"><i class="fa-solid fa-check" inert></i></button>
+        <button type="button" class="srr-chip-x" data-action="srrPlannedEdit" data-id="${esc(record.id)}"
+          aria-label="${esc(t("SRR.Planned.edit"))}" data-tooltip="${esc(t("SRR.Planned.edit"))}"><i class="fa-solid fa-pen" inert></i></button>
+        <button type="button" class="srr-chip-x" data-action="srrPlannedRemove" data-id="${esc(record.id)}"
+          aria-label="${esc(t("SRR.Planned.remove"))}" data-tooltip="${esc(t("SRR.Planned.remove"))}"><i class="fa-solid fa-xmark" inert></i></button></span>`;
+    }).join("");
+    return `<span class="srr-recent-label">${iconHtml("fa-calendar-check")} ${esc(t("SRR.Planned.title"))}</span>${chips}`;
+  }
+
+  /**
+   * What a planned check asks, in the words of the window.
+   * @param {object} record
+   * @returns {string}
+   */
+  #recordText(record) {
+    const first = this.#rollsById().get(record.rolls[0]);
+    const text = first ? this.#rollText(first) : record.rolls[0];
+    const dc = record.values.dc !== "" ? ` ${record.values.dc}` : "";
+    return `${text}${dc}${record.rolls.length > 1 ? ` +${record.rolls.length - 1}` : ""}`;
+  }
+
+  /** Draw the bar of the planned checks again (the scene changed, or a check did). */
+  drawPlanned() {
+    const bar = this.element?.querySelector(".srr-rq-planned");
+    if ( !bar ) return;
+    const list = planned();
+    bar.innerHTML = this.#plannedHtml();
+    bar.classList.toggle("is-hidden", !list.length);
+    this.#sync();
+  }
+
   /** @returns {object[]} */
   #presets() {
     try {
@@ -491,6 +549,7 @@ export class RequestWindow extends ApplicationV2 {
         <div class="srr-quick">${this.#quickHtml()}</div>
       </div>
       <div class="srr-rq-recent${recentRequests().length ? "" : " is-hidden"}">${this.#recentHtml()}</div>
+      <div class="srr-rq-planned${planned().length ? "" : " is-hidden"}">${this.#plannedHtml()}</div>
       <div class="srr-rq-panes">
         <div class="srr-rq-rolls">
           ${order.map(g => this.#groupHtml(g)).join("")}
@@ -518,6 +577,7 @@ export class RequestWindow extends ApplicationV2 {
       </div>
       <footer class="srr-rq-foot">
         <button type="button" class="srr-preset-save" data-action="srrPresetSave" data-tooltip="${esc(t("SRR.Request.presetSave"))}" aria-label="${esc(t("SRR.Request.presetSave"))}"><i class="fa-solid fa-bookmark" inert></i></button>
+        <button type="button" class="srr-planned-save" data-action="srrPlannedSave"><i class="fa-solid fa-calendar-plus" inert></i></button>
         <button type="button" class="srr-repeat-last" data-action="srrRepeat" data-index="0" data-tooltip="${esc(t("SRR.Request.repeat"))}" aria-label="${esc(t("SRR.Request.repeat"))}"><i class="fa-solid fa-rotate-right" inert></i></button>
         <span class="srr-rq-hint">${esc(t("SRR.Request.choiceHint"))}</span>
         <button type="button" class="srr-secret-all" data-action="srrSecretAll" data-tooltip="${esc(t("SRR.Request.secretAllHint"))}"><i class="fa-solid fa-user-secret" inert></i> <span class="srr-secret-text"></span></button>
@@ -607,6 +667,13 @@ export class RequestWindow extends ApplicationV2 {
       if ( text ) text.textContent = t(`SRR.Request.secretAll.${count === 1 ? "one" : "many"}`, {count});
     }
     form.querySelector(".srr-repeat-last")?.toggleAttribute("disabled", !recentRequests().length);
+    const plan = form.querySelector(".srr-planned-save");
+    if ( plan ) {
+      const text = t(this.#fromPlanned && planned().some(item => item.id === this.#fromPlanned) ? "SRR.Planned.saveChange" : "SRR.Planned.save");
+      plan.dataset.tooltip = text;
+      plan.setAttribute("aria-label", text);
+      plan.toggleAttribute("disabled", !canvas?.scene);
+    }
     this.#applyToolTab();
   }
 
@@ -1009,6 +1076,95 @@ export class RequestWindow extends ApplicationV2 {
   }
 
   /**
+   * Save the request as a planned check of the viewed scene, or change the one that was loaded from it.
+   * @this {RequestWindow}
+   */
+  static async #onPlannedSave() {
+    const scene = canvas?.scene;
+    if ( !scene ) return;
+    if ( !this.#values.rolls.length ) {
+      ui.notifications.warn(t("SRR.Planned.noRoll"));
+      return;
+    }
+    const current = this.#fromPlanned ? planned(scene).find(item => item.id === this.#fromPlanned) : null;
+    const answer = await askPlanned({label: current?.label ?? "", who: current?.who ?? (PLANNED_WHO.includes(this.#scope) ? this.#scope : "scene"),
+      after: current?.after ?? "keep", text: this.#whatText(this.#request())});
+    if ( !answer ) return;
+    const {rolls, formula, label, dc, showDc, mode, advantage, group, note, autoRollNpcs} = this.#values;
+    const record = {rolls, values: {formula, label, dc, showDc, mode, advantage, group, note, autoRollNpcs}, ...answer};
+    if ( current ) await editPlanned(scene, current.id, {...record, done: false});
+    else this.#fromPlanned = (await createPlanned(scene, record))?.id ?? null;
+    ui.notifications.info(t("SRR.Planned.saved"));
+    this.drawPlanned();
+  }
+
+  /**
+   * Send a planned check. With Shift, Ctrl or Alt it goes into the window instead.
+   * @this {RequestWindow}
+   * @param {PointerEvent} event
+   * @param {HTMLElement} target
+   */
+  static async #onPlannedSend(event, target) {
+    const record = planned().find(item => item.id === target.dataset.id);
+    if ( !record ) return;
+    if ( event.shiftKey || event.ctrlKey || event.altKey || event.metaKey ) {
+      const values = this.#values;
+      Object.assign(values, record.values, {rolls: record.rolls});
+      this.#fromPlanned = record.id;
+      this.#useScope(record.who);
+      for ( const name of ["dc", "note", "formula", "label"] ) {
+        const field = this.element.querySelector(`input[name="${name}"]`);
+        if ( field ) field.value = values[name] ?? "";
+      }
+      this.#checkRolls();
+      this.#drawWho();
+      return;
+    }
+    await sendPlanned(canvas?.scene, record.id);
+    this.drawPlanned();
+  }
+
+  /**
+   * Change the label, the list of who rolls, the values or what happens after the use of a planned check.
+   * @this {RequestWindow}
+   * @param {PointerEvent} event
+   * @param {HTMLElement} target
+   */
+  static async #onPlannedEdit(event, target) {
+    const record = planned().find(item => item.id === target.dataset.id);
+    if ( !record ) return;
+    const answer = await askPlanned({...record, text: this.#recordText(record), full: true});
+    if ( !answer ) return;
+    await editPlanned(canvas.scene, record.id, answer);
+    this.drawPlanned();
+  }
+
+  /**
+   * Mark a planned check as done, or open again.
+   * @this {RequestWindow}
+   * @param {PointerEvent} event
+   * @param {HTMLElement} target
+   */
+  static async #onPlannedDone(event, target) {
+    const record = planned().find(item => item.id === target.dataset.id);
+    if ( !record ) return;
+    await editPlanned(canvas.scene, record.id, {done: !record.done});
+    this.drawPlanned();
+  }
+
+  /**
+   * Delete a planned check.
+   * @this {RequestWindow}
+   * @param {PointerEvent} event
+   * @param {HTMLElement} target
+   */
+  static async #onPlannedRemove(event, target) {
+    if ( this.#fromPlanned === target.dataset.id ) this.#fromPlanned = null;
+    await deletePlanned(canvas.scene, target.dataset.id);
+    this.drawPlanned();
+  }
+
+  /**
    * Make the request of the window and remember it.
    * @param {Function} create   createRequest, or createSecretRequest
    * @returns {Promise<void>}
@@ -1036,6 +1192,50 @@ export class RequestWindow extends ApplicationV2 {
     const name = this.#whatText({...input, mode});
     await rememberRequest(recentRecord({rolls, actors, name, values: {...values, mode}}));
     this.close();
+  }
+}
+
+/**
+ * Ask for the details of a planned check.
+ * @param {object} start
+ * @param {string} start.text        What the check asks, shown on top
+ * @param {string} [start.label]
+ * @param {string} [start.who]
+ * @param {string} [start.after]
+ * @param {boolean} [start.full]     Also the DC, who sees the result and the group rule
+ * @param {object} [start.values]
+ * @returns {Promise<object|null>}   The new values, or null when the dialog was cancelled
+ */
+async function askPlanned({text, label="", who="scene", after="keep", full=false, values={}}) {
+  const select = (name, list, current, key, title) => `<div class="form-group"><label>${esc(title)}</label><div class="form-fields">
+    <select name="${name}">${list.map(id => `<option value="${esc(id)}"${id === current ? " selected" : ""}>${esc(t(`${key}.${id}`))}</option>`).join("")}</select></div></div>`;
+  let extra = "";
+  if ( full ) {
+    extra = `<div class="form-group"><label>${esc(t("SRR.Planned.dc"))}</label><div class="form-fields">
+      <input type="number" name="dc" min="0" max="999" step="1" value="${esc(values.dc ?? "")}"></div></div>
+      <div class="form-group"><label>${esc(t("SRR.Request.showDc"))}</label><div class="form-fields">
+      <input type="checkbox" name="showDc"${values.showDc !== false ? " checked" : ""}></div></div>`
+      + select("mode", MODES, values.mode ?? "public", "SRR.Mode", t("SRR.Request.mode"))
+      + select("group", ["off", ...GROUP_RULES], values.group ?? "off", "SRR.GroupRule", t("SRR.Request.group"));
+  }
+  const content = `<p>${esc(text)}</p>
+    <div class="form-group"><label>${esc(t("SRR.Planned.label"))}</label><div class="form-fields">
+      <input type="text" name="label" maxlength="60" value="${esc(label)}" placeholder="${esc(text)}" autofocus></div></div>
+    ${select("who", PLANNED_WHO, who, "SRR.Scope", t("SRR.Planned.who"))}${extra}${select("after", PLANNED_AFTER, after, "SRR.Planned.afterUse", t("SRR.Planned.after"))}`;
+  try {
+    return await foundry.applications.api.DialogV2.prompt({
+      window: {title: t("SRR.Planned.dialogTitle"), icon: "fa-solid fa-calendar-check"},
+      content,
+      rejectClose: false,
+      ok: {label: t("SRR.Planned.ok"), callback: (event, button) => {
+        const data = new foundry.applications.ux.FormDataExtended(button.form).object;
+        const answer = {label: data.label ?? "", who: data.who, after: data.after};
+        if ( full ) answer.values = {dc: (data.dc === null) || (data.dc === undefined) || (data.dc === "") ? "" : String(data.dc), showDc: !!data.showDc, mode: data.mode, group: data.group};
+        return answer;
+      }}
+    });
+  } catch {
+    return null;
   }
 }
 

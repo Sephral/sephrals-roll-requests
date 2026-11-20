@@ -38,6 +38,60 @@
       "button": "Wurf anfordern",
       "entry": "Wurf anfordern"
     },
+    "Planned": {
+      "title": "Geplant für diese Szene",
+      "dialogTitle": "Probe planen",
+      "ok": "Speichern",
+      "label": "Bezeichnung",
+      "who": "Wer würfelt",
+      "after": "Nach dem Senden",
+      "dc": "SG",
+      "afterUse": {
+        "keep": "Bleibt in der Liste",
+        "done": "Als erledigt markieren"
+      },
+      "save": "Probe für die Szene planen",
+      "saveChange": "Änderung an der geplanten Probe speichern",
+      "saved": "Für diese Szene geplant.",
+      "noRoll": "Wähle zuerst einen Wurf.",
+      "sendHint": "Senden: {what} ({who}). Shift, Strg oder Alt und Klick: im Fenster öffnen.",
+      "edit": "Diese geplante Probe ändern",
+      "remove": "Diese geplante Probe löschen",
+      "done": "Als erledigt markieren",
+      "undone": "Wieder öffnen",
+      "gone": "Geplante Probe nicht gefunden"
+    },
+    "BEHAVIOR": {
+      "label": "Geplante Probe auslösen",
+      "hint": "Ein Token, das diese Region betritt, löst eine für die Szene geplante Probe aus. Nur der aktive SL sendet sie.",
+      "FIELDS": {
+        "check": {
+          "label": "Geplante Probe",
+          "hint": "Eine der Proben, die du im Anfragefenster für diese Szene geplant hast."
+        },
+        "who": {
+          "label": "Wer würfelt",
+          "hint": "Das Token, das hineingegangen ist, oder alle Token in der Region."
+        },
+        "times": {
+          "label": "Wie oft",
+          "hint": "Einmal pro Token (einmal für die ganze Region, wenn alle Token würfeln) oder jedes Mal, wenn ein Token hineingeht."
+        },
+        "playersOnly": {
+          "label": "Nur Spielercharaktere",
+          "hint": "Token ohne Spielerbesitzer lösen die Probe nicht aus und würfeln nicht."
+        }
+      },
+      "who": {
+        "token": "Das Token, das hineingegangen ist",
+        "region": "Alle Token in der Region"
+      },
+      "times": {
+        "once": "Einmal",
+        "always": "Jedes Mal"
+      },
+      "none": "Keine"
+    },
     "Keys": {
       "openRequest": "Würfe anfordern",
       "openRequestHint": "Öffnet das Anforderungsfenster (SL).",

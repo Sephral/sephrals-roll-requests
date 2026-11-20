@@ -38,6 +38,60 @@
       "button": "Ask for a roll",
       "entry": "Ask for a roll"
     },
+    "Planned": {
+      "title": "Planned for this scene",
+      "dialogTitle": "Plan this check",
+      "ok": "Save",
+      "label": "Label",
+      "who": "Who rolls",
+      "after": "After use",
+      "dc": "DC",
+      "afterUse": {
+        "keep": "Stays in the list",
+        "done": "Mark as done"
+      },
+      "save": "Plan this check for the scene",
+      "saveChange": "Save the change to the planned check",
+      "saved": "Planned for this scene.",
+      "noRoll": "Pick a roll first.",
+      "sendHint": "Send: {what} ({who}). Shift, Ctrl or Alt click: open in the window.",
+      "edit": "Change this planned check",
+      "remove": "Delete this planned check",
+      "done": "Mark as done",
+      "undone": "Open again",
+      "gone": "Planned check not found"
+    },
+    "BEHAVIOR": {
+      "label": "Run planned check",
+      "hint": "A token that enters this Region triggers a check planned for the scene. Only the active GM sends it.",
+      "FIELDS": {
+        "check": {
+          "label": "Planned check",
+          "hint": "One of the checks planned for this scene in the request window."
+        },
+        "who": {
+          "label": "Who rolls",
+          "hint": "The token that entered, or every token in the Region."
+        },
+        "times": {
+          "label": "How often",
+          "hint": "Once per token (once for the whole Region when all tokens roll), or every time a token enters."
+        },
+        "playersOnly": {
+          "label": "Player characters only",
+          "hint": "Tokens without a player owner do not trigger the check and do not roll."
+        }
+      },
+      "who": {
+        "token": "The token that entered",
+        "region": "Every token in the Region"
+      },
+      "times": {
+        "once": "Once",
+        "always": "Every time"
+      },
+      "none": "None"
+    },
     "Keys": {
       "openRequest": "Request rolls",
       "openRequestHint": "Opens the request window (GM).",

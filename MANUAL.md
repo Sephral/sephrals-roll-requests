@@ -29,6 +29,20 @@ The window starts with your last roll. DC, advantage, results, group and note st
 | Bookmark | Saves the request without who rolls as a preset. The cross on a preset deletes it. |
 | Roll secretly for all | The button next to *Send*: you roll for everyone who is ticked (the selected tokens, when *Selected* is open), whatever *Results* says. Players get no prompt and no chat message, the card with every total, pass or fail against the DC and the group outcome is whispered to the GMs alone. It is the *Silent* request in one click. |
 | Sent lately | The last 8 requests of this GM with the characters they went to, in a row above the buttons. A click sends one again at once, the cross forgets it. The circular arrow next to the bookmark repeats the last one. Characters that no longer exist are left out. Presets stay as they are: they hold no characters and fill the window instead of sending. |
+| Planned for this scene | The calendar button next to the bookmark plans the request as a check for the scene you are viewing: a short label, who rolls (*Scene*, *Party*, *Selected* or *All*, worked out when you send it) and what happens after the use (*stays in the list* or *mark as done*). Planned checks stand in a row above the buttons. A click sends one at once, the window stays open for the next. With Shift, Ctrl or Alt held it loads the check into the window for a last change, and the calendar button then saves your change into that check instead of adding another. The pen changes label, who rolls, DC, whether players see it, results and group rule, the check mark marks a check as done or open again (a done check is crossed out but still works), the cross deletes it. A changed request is open again, a scene keeps up to 30 checks. |
+
+### Planned checks in a Region
+
+The Region behavior *Run planned check* (Region configuration, *Behaviors*) sends a planned check when a token enters the Region. Pick the check from the list of the planned checks of that scene.
+
+| Field | Does |
+| --- | --- |
+| Planned check | The check to send. A check that was deleted sends nothing and shows as *not found* |
+| Who rolls | *The token that entered* asks that token's character, *Every token in the Region* asks all tokens inside, the one that just entered included |
+| How often | *Once* remembers it per token (once for the whole Region when every token in it rolls), *Every time* sends it with each entry. To run a *once* behavior again, clear the flag `sephrals-roll-requests.fired` of the behavior or make a new one |
+| Player characters only | On by default: tokens whose character no player owns neither trigger the check nor roll |
+
+Only the active GM sends it, the other clients do nothing. Who rolls, the DC and the results come from the planned check, the *Who rolls* list of the check is not used. Entering is what counts, a Region does not send anything for a token that was inside already. Moving a token with the arrow keys or by dragging fires the event like any other movement.
 
 ### The card
 
@@ -91,7 +105,7 @@ The module can take part in a small usage report shared by all of Sephral’s mo
 With the GM’s consent only the active GM’s browser counts, and it sends at most one report a day. The counts are kept in a hidden world setting, so all browsers and computers of the GM count together, and turning the statistics off deletes them. A copy of a world gets its own world ID. The question lists everything the report contains, from the Foundry version to a random world ID. For Roll Requests it holds:
 
 * on how many of the last 30 days the module was used
-* how often the GM makes requests, group checks, silent requests, requests with an own formula, with a choice of rolls and for passive values, how often the GM uses a preset, rolls for a character, rolls secretly for all, sends a recent request again and opens the window from the token HUD or the Actors directory
+* how often the GM makes requests, group checks, silent requests, requests with an own formula, with a choice of rolls and for passive values, how often the GM uses a preset, rolls for a character, rolls secretly for all, sends a recent request again, opens the window from the token HUD or the Actors directory, plans a check, sends a planned check and how often a Region runs one
 * the settings *Look*, *Open a roll window*, *Sound with a request* and *Your rolls skip the dialog* (only the chosen option)
 * where errors occur in the module code: file, line, error type and whether the error arose in the module itself, in Foundry, in the game system or in another module, never the error message or the name of another module
 
@@ -108,6 +122,8 @@ The file contains chat text and whispers. Check it before you share it.
 The first button in the module settings, *Sephral’s Modules* (GMs only), opens one window for all of Sephral's modules in the world: the version, self test, settings, manual and demo video of each, a button that switches on an installed module that is off (Foundry then reloads the world for everyone), and the debug file. Below, *More from Sephral* lists other modules that fit the game system of the world, shown only after a click, each with its demo video and an *Install* button. Foundry installs modules only on its setup screen, so the button copies the module's link (manifest URL) and shows the steps with a short clip. When the GM launches the world again, the window opens once with the new module and its *Enable* button. The list is part of the module. Only a video you start is loaded, from the module page on GitHub. If the GM agreed to the usage statistics, the window also counts how it is used: opened, the other modules shown, a video or install link of one of them, a module installed or switched on from it. It never records which module.
 
 ## Storage
+
+Planned checks are a flag of their scene (`flags.sephrals-roll-requests.planned`), so they travel with the scene and with its exports. They hold no characters, only the kind of list. The Region behavior keeps the tokens it already asked in the flag `fired` of the behavior.
 
 Each request lives in its chat message. Deleting the card deletes the request. The card holds the DC and all results, also when players do not see them on the card: the hiding happens in each player's browser, someone who reads the chat data in the browser console can find them.
 
@@ -128,6 +144,10 @@ Each request lives in its chat message. Deleting the card deletes the request. T
 | `rollSecretly(options)` | Like `request` with `mode: "silent"` (GM): rolls for every character at once, nothing reaches the players, the card is whispered to the GMs. Counts as a secret roll for all |
 | `repeat(index)` | Sends a recent request again (GM), `0` is the last one up to `7`. Returns its chat message or `null` |
 | `recentRequests()` | The recent requests of this GM, newest first: `{name, rolls, values, actors}` (stored as the client setting `recentRequests`, up to 8, identical requests move up) |
+| `planned.list(scene)` | The checks planned for a scene (the viewed one when `scene` is empty): `{id, label, rolls, values, who, after, done}` |
+| `planned.create(scene, check)` | Plans a check (GM): `rolls` (ids like `skill:prc`, `save:dex`, `formula:`), `values` (`dc`, `showDc`, `mode`, `group`, `advantage`, `note`, `formula`, `label`), `label`, `who` (`"scene"`, `"party"`, `"selected"`, `"all"`), `after` (`"keep"`, `"done"`). Returns the stored check or `null` |
+| `planned.update(scene, id, patch)` / `planned.remove(scene, id)` | Changes or deletes a planned check (GM) |
+| `planned.send(scene, id, {actors})` | Sends a planned check (GM) to its own list or to the given `actors`. Returns the chat message or `null` |
 | `openDialog(defaults)` | Opens the request window (GM), optionally with values and `actors` to start with |
 | `openPrompt()` | Opens the roll window of this player |
 | `rollTypes()` | The rolls of the running system: `[{type, icon, options: [{key, label, icon}]}]` |
