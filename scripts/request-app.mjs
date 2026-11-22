@@ -59,10 +59,27 @@ function searchText(...parts) {
 export class RequestWindow extends ApplicationV2 {
   /**
    * @param {object} [defaults]   Values to start with instead of the last request
+   * @param {object} [options]    Window options (a sample window gives its own id)
    */
-  constructor(defaults={}) {
-    super();
+  constructor(defaults={}, options={}) {
+    super(options);
     this.defaults = defaults;
+  }
+
+  /**
+   * Made-up lists of a sample window (sample-windows.mjs): {presets, recent, planned}. A real window reads its own.
+   * @type {object|null}
+   */
+  sample = null;
+
+  /** @returns {object[]} The requests sent lately. */
+  #recentList() {
+    return this.sample?.recent ?? recentRequests();
+  }
+
+  /** @returns {object[]} The checks planned for the viewed scene. */
+  #plannedList() {
+    return this.sample?.planned ?? planned();
   }
 
   /** @override */
@@ -444,7 +461,7 @@ export class RequestWindow extends ApplicationV2 {
    * @returns {string}
    */
   #recentHtml() {
-    const list = recentRequests();
+    const list = this.#recentList();
     if ( !list.length ) return "";
     const chips = list.map((record, index) => {
       const count = record.actors.length;
@@ -463,7 +480,7 @@ export class RequestWindow extends ApplicationV2 {
    * @returns {string}
    */
   #plannedHtml() {
-    const list = planned();
+    const list = this.#plannedList();
     if ( !list.length ) return "";
     const chips = list.map(record => {
       const text = plannedText(record, this.#recordText(record));
@@ -499,7 +516,7 @@ export class RequestWindow extends ApplicationV2 {
   drawPlanned() {
     const bar = this.element?.querySelector(".srr-rq-planned");
     if ( !bar ) return;
-    const list = planned();
+    const list = this.#plannedList();
     bar.innerHTML = this.#plannedHtml();
     bar.classList.toggle("is-hidden", !list.length);
     this.#sync();
@@ -507,6 +524,7 @@ export class RequestWindow extends ApplicationV2 {
 
   /** @returns {object[]} */
   #presets() {
+    if ( this.sample ) return this.sample.presets ?? [];
     try {
       return setting("presets") ?? [];
     } catch {
@@ -549,8 +567,8 @@ export class RequestWindow extends ApplicationV2 {
           <input type="text" name="filter" value="${esc(this.#filter)}" autocomplete="off" placeholder="${esc(t("SRR.Request.filter"))}" aria-label="${esc(t("SRR.Request.filter"))}"></label>
         <div class="srr-quick">${this.#quickHtml()}</div>
       </div>
-      <div class="srr-rq-recent${recentRequests().length ? "" : " is-hidden"}">${this.#recentHtml()}</div>
-      <div class="srr-rq-planned${planned().length ? "" : " is-hidden"}">${this.#plannedHtml()}</div>
+      <div class="srr-rq-recent${this.#recentList().length ? "" : " is-hidden"}">${this.#recentHtml()}</div>
+      <div class="srr-rq-planned${this.#plannedList().length ? "" : " is-hidden"}">${this.#plannedHtml()}</div>
       <div class="srr-rq-panes">
         <div class="srr-rq-rolls">
           ${order.map(g => this.#groupHtml(g)).join("")}
@@ -677,10 +695,10 @@ export class RequestWindow extends ApplicationV2 {
         secret.dataset.tooltip = `${text.textContent}. ${t("SRR.Request.secretAllHint")}`;
       }
     }
-    form.querySelector(".srr-repeat-last")?.toggleAttribute("disabled", !recentRequests().length);
+    form.querySelector(".srr-repeat-last")?.toggleAttribute("disabled", !this.#recentList().length);
     const plan = form.querySelector(".srr-planned-save");
     if ( plan ) {
-      const text = t(this.#fromPlanned && planned().some(item => item.id === this.#fromPlanned) ? "SRR.Planned.saveChange" : "SRR.Planned.save");
+      const text = t(this.#fromPlanned && this.#plannedList().some(item => item.id === this.#fromPlanned) ? "SRR.Planned.saveChange" : "SRR.Planned.save");
       plan.dataset.tooltip = text;
       plan.setAttribute("aria-label", text);
       plan.toggleAttribute("disabled", !canvas?.scene);
@@ -919,7 +937,7 @@ export class RequestWindow extends ApplicationV2 {
       const preset = this.#presets()[Number(target.dataset.preset)];
       if ( !preset ) return;
       Object.assign(values, preset.values, {rolls: preset.rolls});
-      countFeature(MODULE_ID, "preset");
+      if ( !this.isSample ) countFeature(MODULE_ID, "preset");
       for ( const name of ["dc", "note", "formula", "label"] ) {
         const field = this.element.querySelector(`input[name="${name}"]`);
         if ( field ) field.value = values[name] ?? "";
@@ -1001,47 +1019,15 @@ export class RequestWindow extends ApplicationV2 {
     const inList = new Set(this.#candidates().map(c => fromUuidQuiet(c.uuid)).map(doc => (doc?.actor ?? doc)?.uuid).filter(Boolean));
     const rows = (game.actors?.contents ?? []).filter(actor => !inList.has(actor.uuid) && actor.testUserPermission(game.user, "OBSERVER"))
       .map(actor => ({uuid: actor.uuid, name: actor.name, img: actor.img, owners: playerOwners(actor).map(user => user.name).join(", ")}));
-    rows.sort((a, b) => a.name.localeCompare(b.name, game.i18n.lang));
-    const heroes = rows.filter(row => row.owners);
-    const others = rows.filter(row => !row.owners);
-    const list = (title, items) => items.length ? `<h4>${esc(title)}</h4>${items.map(row => `<label class="srr-pick-row" data-search="${esc(searchText(`${row.name} ${row.owners}`))}">
-      <input type="checkbox" name="pick" value="${esc(row.uuid)}"><img src="${esc(row.img || "icons/svg/mystery-man.svg")}" alt="">
-      <span class="srr-pick-name">${esc(row.name)}</span><span class="srr-pick-owner">${esc(row.owners)}</span></label>`).join("")}` : "";
-    const body = rows.length ? `<input type="search" class="srr-pick-filter" placeholder="${esc(t("SRR.Request.addPlayerFilter"))}" aria-label="${esc(t("SRR.Request.addPlayerFilter"))}" autofocus>
-      <div class="srr-pick-list">${list(t("SRR.Request.addPlayerHeroes"), heroes)}${list(t("SRR.Request.addPlayerOthers"), others)}
-      <p class="srr-empty srr-pick-none is-hidden">${esc(t("SRR.Request.addPlayerNone"))}</p></div>`
-      : `<p class="srr-empty">${esc(t("SRR.Request.addPlayerEmpty"))}</p>`;
     let uuids;
     try {
       uuids = await foundry.applications.api.DialogV2.prompt({
         classes: ["srr-app", "srr-picker-dialog"],
         window: {title: t("SRR.Request.drop"), icon: "fa-solid fa-user-plus"},
         position: {width: 380},
-        content: `<div class="srr-body srr-rq srr-picker" data-srr-theme="${esc(setting("theme"))}">${body}</div>`,
+        content: pickerHtml(rows),
         rejectClose: false,
-        render: (event, dialog) => {
-          const root = dialog.element;
-          const filter = root.querySelector(".srr-pick-filter");
-          filter?.addEventListener("input", () => {
-            const words = searchText(filter.value).split(/\s+/).filter(Boolean);
-            let shown = 0;
-            for ( const row of root.querySelectorAll(".srr-pick-row") ) {
-              const on = words.every(word => row.dataset.search.includes(word));
-              row.classList.toggle("is-hidden", !on);
-              shown += on ? 1 : 0;
-            }
-            for ( const head of root.querySelectorAll(".srr-picker h4") ) {
-              let next = head.nextElementSibling;
-              let any = false;
-              while ( next?.classList.contains("srr-pick-row") ) {
-                any ||= !next.classList.contains("is-hidden");
-                next = next.nextElementSibling;
-              }
-              head.classList.toggle("is-hidden", !any);
-            }
-            root.querySelector(".srr-pick-none")?.classList.toggle("is-hidden", shown > 0);
-          });
-        },
+        render: (event, dialog) => wirePicker(dialog.element),
         ok: {label: t("SRR.Request.addPlayerOk"), callback: (event, button) =>
           [...button.form.querySelectorAll("input[name=pick]:checked")].map(input => input.value)}
       });
@@ -1271,17 +1257,57 @@ export class RequestWindow extends ApplicationV2 {
 }
 
 /**
- * Ask for the details of a planned check.
- * @param {object} start
- * @param {string} start.text        What the check asks, shown on top
- * @param {string} [start.label]
- * @param {string} [start.who]
- * @param {string} [start.after]
- * @param {boolean} [start.full]     Also the DC, who sees the result and the group rule
- * @param {object} [start.values]
- * @returns {Promise<object|null>}   The new values, or null when the dialog was cancelled
+ * The content of the dialog that adds actors to the window (also shown by the sample window).
+ * @param {{uuid: string, name: string, img: string, owners: string}[]} rows   Actors that are not in the list yet
+ * @returns {string}
  */
-async function askPlanned({text, label="", who="scene", after="keep", full=false, values={}}) {
+export function pickerHtml(rows) {
+  rows = [...rows].sort((a, b) => a.name.localeCompare(b.name, game.i18n.lang));
+  const heroes = rows.filter(row => row.owners);
+  const others = rows.filter(row => !row.owners);
+  const list = (title, items) => items.length ? `<h4>${esc(title)}</h4>${items.map(row => `<label class="srr-pick-row" data-search="${esc(searchText(`${row.name} ${row.owners}`))}">
+    <input type="checkbox" name="pick" value="${esc(row.uuid)}"><img src="${esc(row.img || "icons/svg/mystery-man.svg")}" alt="">
+    <span class="srr-pick-name">${esc(row.name)}</span><span class="srr-pick-owner">${esc(row.owners)}</span></label>`).join("")}` : "";
+  const body = rows.length ? `<input type="search" class="srr-pick-filter" placeholder="${esc(t("SRR.Request.addPlayerFilter"))}" aria-label="${esc(t("SRR.Request.addPlayerFilter"))}" autofocus>
+    <div class="srr-pick-list">${list(t("SRR.Request.addPlayerHeroes"), heroes)}${list(t("SRR.Request.addPlayerOthers"), others)}
+    <p class="srr-empty srr-pick-none is-hidden">${esc(t("SRR.Request.addPlayerNone"))}</p></div>`
+    : `<p class="srr-empty">${esc(t("SRR.Request.addPlayerEmpty"))}</p>`;
+  return `<div class="srr-body srr-rq srr-picker" data-srr-theme="${esc(setting("theme"))}">${body}</div>`;
+}
+
+/**
+ * The filter of the add dialog: hides the rows (and headings) the typed words do not find.
+ * @param {HTMLElement} root
+ */
+export function wirePicker(root) {
+  const filter = root.querySelector(".srr-pick-filter");
+  filter?.addEventListener("input", () => {
+    const words = searchText(filter.value).split(/\s+/).filter(Boolean);
+    let shown = 0;
+    for ( const row of root.querySelectorAll(".srr-pick-row") ) {
+      const on = words.every(word => row.dataset.search.includes(word));
+      row.classList.toggle("is-hidden", !on);
+      shown += on ? 1 : 0;
+    }
+    for ( const head of root.querySelectorAll(".srr-picker h4") ) {
+      let next = head.nextElementSibling;
+      let any = false;
+      while ( next?.classList.contains("srr-pick-row") ) {
+        any ||= !next.classList.contains("is-hidden");
+        next = next.nextElementSibling;
+      }
+      head.classList.toggle("is-hidden", !any);
+    }
+    root.querySelector(".srr-pick-none")?.classList.toggle("is-hidden", shown > 0);
+  });
+}
+
+/**
+ * The content of the dialog that plans a check (also shown by the sample window).
+ * @param {object} start    See `askPlanned`
+ * @returns {string}
+ */
+export function plannedFormHtml({text, label="", who="scene", after="keep", full=false, values={}}) {
   const select = (name, list, current, key, title) => `<div class="form-group"><label>${esc(title)}</label><div class="form-fields">
     <select name="${name}">${list.map(id => `<option value="${esc(id)}"${id === current ? " selected" : ""}>${esc(t(`${key}.${id}`))}</option>`).join("")}</select></div></div>`;
   let extra = "";
@@ -1293,10 +1319,25 @@ async function askPlanned({text, label="", who="scene", after="keep", full=false
       + select("mode", MODES, values.mode ?? "public", "SRR.Mode", t("SRR.Request.mode"))
       + select("group", ["off", ...GROUP_RULES], values.group ?? "off", "SRR.GroupRule", t("SRR.Request.group"));
   }
-  const content = `<p>${esc(text)}</p>
+  return `<p>${esc(text)}</p>
     <div class="form-group"><label>${esc(t("SRR.Planned.label"))}</label><div class="form-fields">
       <input type="text" name="label" maxlength="60" value="${esc(label)}" placeholder="${esc(text)}" autofocus></div></div>
     ${select("who", PLANNED_WHO, who, "SRR.Scope", t("SRR.Planned.who"))}${extra}${select("after", PLANNED_AFTER, after, "SRR.Planned.afterUse", t("SRR.Planned.after"))}`;
+}
+
+/**
+ * Ask for the details of a planned check.
+ * @param {object} start
+ * @param {string} start.text        What the check asks, shown on top
+ * @param {string} [start.label]
+ * @param {string} [start.who]
+ * @param {string} [start.after]
+ * @param {boolean} [start.full]     Also the DC, who sees the result and the group rule
+ * @param {object} [start.values]
+ * @returns {Promise<object|null>}   The new values, or null when the dialog was cancelled
+ */
+async function askPlanned({text, label="", who="scene", after="keep", full=false, values={}}) {
+  const content = plannedFormHtml({text, label, who, after, full, values});
   try {
     return await foundry.applications.api.DialogV2.prompt({
       window: {title: t("SRR.Planned.dialogTitle"), icon: "fa-solid fa-calendar-check"},

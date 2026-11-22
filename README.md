@@ -22,7 +22,7 @@
 * **NPCs roll themselves:** characters without a player roll at once, and one click rolls the rest for anyone who is away.
 * **Rerolls count:** a hero point in Pathfinder 2e or a benny in Savage Worlds replaces the result on the card, and you can let anyone roll again.
 * **Nothing gets lost:** rolls made without a GM reach their card when one joins, and late players still get the roll window.
-* **Many systems:** D&D 5e, Pathfinder 2e, Savage Worlds and Crucible, formulas in any other system.
+* **Many systems:** D&D 5e, Pathfinder 2e, Savage Worlds, Crucible, Daggerheart and Tormenta20 (Foundry 14), formulas in any other system. In Daggerheart the card shows success against the difficulty and whether each roll came with Hope or Fear.
 
 ## How it works
 

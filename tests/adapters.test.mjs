@@ -2,10 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {firstTotal, naturalD20, rollsOf, sortByLabel} from "../scripts/adapters/common.mjs";
 import {crucible, crucibleGroups, crucibleRollArgs} from "../scripts/adapters/crucible.mjs";
+import {bestTrait, daggerheart, daggerheartGroups, daggerheartRollArgs, dualityMatches, dualityOf, experienceSlug,
+  experiencesOf} from "../scripts/adapters/daggerheart.mjs";
 import {dnd5e, dnd5eGroups, dnd5eMessage, dnd5eRollArgs, dnd5eRollKind} from "../scripts/adapters/dnd5e.mjs";
 import {ADAPTERS, generic, getAdapter} from "../scripts/adapters/index.mjs";
 import {checkContext, flatFormula, pf2e, pf2eGroups, pf2eRollArgs} from "../scripts/adapters/pf2e.mjs";
 import {findSkill, swade, swadeGroups, swadeSlug} from "../scripts/adapters/swade.mjs";
+import {shiftSkipsDialog, tormenta20, tormenta20Groups, tormenta20Label, tormenta20RollArgs} from "../scripts/adapters/tormenta20.mjs";
 
 /** A roll as messages hold it: the dice with their results and the total. */
 const roll = (total, d20=null, extra={}) => ({total, dice: d20 === null ? [] : [{faces: 20, results: d20}], ...extra});
@@ -16,8 +19,10 @@ test("the adapter follows the system, others get formulas", () => {
   assert.equal(getAdapter("pf2e"), pf2e);
   assert.equal(getAdapter("swade"), swade);
   assert.equal(getAdapter("crucible"), crucible);
+  assert.equal(getAdapter("daggerheart"), daggerheart);
+  assert.equal(getAdapter("tormenta20"), tormenta20);
   assert.equal(getAdapter("coc7"), generic);
-  assert.deepEqual(Object.keys(ADAPTERS).sort(), ["crucible", "dnd5e", "pf2e", "sf2e", "swade"]);
+  assert.deepEqual(Object.keys(ADAPTERS).sort(), ["crucible", "daggerheart", "dnd5e", "pf2e", "sf2e", "swade", "tormenta20"]);
   assert.equal(getAdapter("sf2e"), pf2e);
 });
 
@@ -278,4 +283,199 @@ test("Starfinder 2e reads its check context from either flag scope", () => {
   } finally {
     delete globalThis.game;
   }
+});
+
+/** A duality roll as the message holds it: Hope die, Fear die, the total with all modifiers. */
+const duality = (hope, fear, total, extra={}) => ({total, dice: [{class: "HopeDie", faces: 12, total: hope}, {class: "FearDie", faces: 12, total: fear}], ...extra});
+
+const TRAITS = {agility: {label: "Agility"}, strength: {label: "Strength"}, finesse: {label: "Finesse"},
+  instinct: {label: "Instinct"}, presence: {label: "Presence"}, knowledge: {label: "Knowledge"}};
+const hero = (traits={}, experiences={}) => ({type: "character", system: {traits, experiences}});
+
+test("Daggerheart offers the six traits, reaction rolls and the experiences of the characters", () => {
+  const actors = [hero({}, {a: {name: "Tracker", value: 2}, b: {name: "Street rat", value: 2}}), hero({}, {c: {name: "tracker", value: 2}})];
+  const groups = daggerheartGroups(TRAITS, actors);
+  assert.deepEqual(groups.map(g => g.type), ["trait", "reaction", "experience"]);
+  assert.deepEqual(groups[0].options.map(o => o.key), ["agility", "strength", "finesse", "instinct", "presence", "knowledge"]);
+  assert.deepEqual(groups[2].options.map(o => o.key), ["street-rat", "tracker"]);
+  // Without characters there are no experiences to offer
+  assert.deepEqual(daggerheartGroups(TRAITS).map(g => g.type), ["trait", "reaction"]);
+  assert.equal(experienceSlug("Street rat!"), "street-rat");
+  assert.deepEqual(experiencesOf(actors[0]).map(e => e.id), ["a", "b"]);
+  assert.equal(daggerheart.isCharacter({type: "character"}), true);
+  assert.equal(daggerheart.isCharacter({type: "adversary"}), false);
+  assert.equal(daggerheart.dcName, "difficulty");
+});
+
+test("Daggerheart rolls the trait with the difficulty, advantage and reaction the request asks for", () => {
+  const actor = hero({agility: {value: 1}, instinct: {value: 3}, presence: {value: 3}}, {a: {name: "Tracker", value: 2}});
+  const trait = daggerheartRollArgs({type: "trait", key: "agility", dc: 12, showDc: true, advantage: "advantage", mode: "public"}, actor, {});
+  assert.equal(trait.trait, "agility");
+  assert.deepEqual(trait.args.roll, {type: "trait", trait: "agility", difficulty: 12, advantage: 1});
+  assert.equal(trait.args.actionType, "action");
+  assert.equal(trait.args.event, undefined);
+  // A hidden difficulty stays out of the system's own card, a quick roll acts as if Shift was held
+  const hidden = daggerheartRollArgs({type: "reaction", key: "agility", dc: 12, showDc: false, advantage: "disadvantage", mode: "gm"}, actor, {fastForward: true});
+  assert.deepEqual(hidden.args.roll, {type: "trait", trait: "agility", advantage: -1});
+  assert.equal(hidden.args.actionType, "reaction");
+  assert.equal(hidden.args.event.shiftKey, true);
+  // A secret roll moves no Hope, Fear or countdown
+  assert.deepEqual(daggerheartRollArgs({type: "trait", key: "agility", dc: null, mode: "silent"}, actor, {}).args.skips,
+    {resources: true, updateCountdowns: true, triggers: true});
+  // An experience starts selected, on the strongest trait (the first on the sheet when equal)
+  const experience = daggerheartRollArgs({type: "experience", key: "tracker", dc: 10, showDc: true, mode: "public"}, actor, {});
+  assert.equal(experience.trait, "instinct");
+  assert.deepEqual(experience.args.experiences, ["a"]);
+  assert.deepEqual(experience.args.costs, [{extKey: "a", key: "hope", value: 1, name: "Tracker"}]);
+  assert.equal(bestTrait(actor), "instinct");
+  assert.equal(bestTrait(hero()), "agility");
+  const click = {shiftKey: false};
+  assert.equal(daggerheartRollArgs({type: "trait", key: "agility", mode: "public"}, actor, {event: click}).args.event, click);
+});
+
+test("Daggerheart reads Hope and Fear and judges against the difficulty", () => {
+  assert.equal(dualityOf(duality(9, 4, 15)).duality, "hope");
+  assert.equal(dualityOf(duality(3, 11, 15)).duality, "fear");
+  assert.equal(dualityOf(duality(7, 7, 15)).duality, "critical");
+  assert.equal(dualityOf({total: 4, dice: []}), null);
+  // Dice without class names count in order: Hope first, then Fear; kept results are read from the dice
+  assert.equal(dualityOf({options: {roll: {type: "trait"}}, dice: [{results: [{result: 8}]}, {results: [{result: 2}]}]}).duality, "hope");
+  assert.equal(dualityOf({dice: [{results: [{result: 8}]}, {results: [{result: 2}]}]}), null);
+  assert.equal(dualityOf({guaranteedCritical: true, dice: []}).duality, "critical");
+  const one = (hope, fear, total, dc) => daggerheart.evaluate(message([duality(hope, fear, total)]), {type: "trait", dc});
+  assert.deepEqual(one(9, 4, 15, 12), {total: 15, natural: null, duality: "hope", success: true, degree: "success"});
+  assert.deepEqual(one(3, 11, 11, 12), {total: 11, natural: null, duality: "fear", success: false, degree: "failure"});
+  assert.equal(one(11, 11, 5, 20).degree, "criticalSuccess");
+  assert.equal(one(11, 11, 5, 20).success, true);
+  assert.equal(one(5, 4, 12, 12).success, true);
+  // No difficulty: no judgment, but Hope and Fear still show
+  assert.deepEqual(one(9, 4, 15, null), {total: 15, natural: null, duality: "hope", success: null, degree: null});
+  assert.equal(daggerheart.evaluate(message([roll(14)]), {type: "formula", dc: 12}).success, true);
+});
+
+test("Daggerheart tells which message answers which request", () => {
+  const made = (trait, actionType="action") => ({rolls: [{total: 9, options: {roll: {type: "trait", trait}, actionType}}]});
+  assert.equal(dualityMatches(made("agility"), {type: "trait", key: "agility"}), true);
+  assert.equal(dualityMatches(made("agility"), {type: "trait", key: "presence"}), false);
+  assert.equal(dualityMatches(made("agility", "reaction"), {type: "trait", key: "agility"}), null);
+  assert.equal(dualityMatches(made("presence", "reaction"), {type: "trait", key: "agility"}), false);
+  assert.equal(dualityMatches(made("agility", "reaction"), {type: "reaction", key: "agility"}), true);
+  assert.equal(dualityMatches(made("finesse"), {type: "experience", key: "tracker"}), true);
+  assert.equal(dualityMatches({rolls: [roll(9)]}, {type: "trait", key: "agility"}), null);
+  assert.equal(dualityMatches(made("agility"), {type: "formula"}), null);
+});
+
+test("Daggerheart: an actor without traits (an adversary) rolls a plain d20 against the difficulty", async () => {
+  const posted = [];
+  globalThis.Roll = class {
+    constructor(formula) { this.formula = formula; this.total = 14; }
+    async evaluate() { return this; }
+    async toMessage(data) { posted.push({formula: this.formula, flavor: data.flavor}); }
+  };
+  globalThis.ChatMessage = {getSpeaker: () => ({})};
+  try {
+    const bandit = {name: "Bandit", type: "adversary", system: {traits: {}}, getRollData: () => ({}), rollTrait: async () => { throw new Error("no"); }};
+    await daggerheart.roll(bandit, {type: "trait", key: "agility", formula: "", dc: 10}, {});
+    assert.deepEqual(posted.map(p => p.formula), ["1d20"]);
+    assert.deepEqual(daggerheart.evaluate(message([roll(14, [{result: 14}])]), {type: "trait", dc: 10}),
+      {total: 14, natural: null, duality: null, success: true, degree: "success"});
+  } finally {
+    delete globalThis.Roll;
+    delete globalThis.ChatMessage;
+  }
+});
+
+/** The configuration of Tormenta20 the adapter reads (CONFIG.T20): skills with their attribute, attributes, saves. */
+const T20 = {
+  atributos: {for: "x", des: "x", con: "x", int: "x", sab: "x", car: "x"},
+  resistencias: {fort: "x", refl: "x", vont: "x"},
+  pericias: {acro: {}, perc: {}, fort: {}, refl: {}, vont: {}, inic: {}, luta: {}, alfa: {}, ofic: {}}
+};
+const t20Texts = {"SRR.T20.attribute.for": "Strength", "SRR.T20.attribute.des": "Dexterity", "SRR.T20.attribute.con": "Constitution",
+  "SRR.T20.attribute.int": "Intelligence", "SRR.T20.attribute.sab": "Wisdom", "SRR.T20.attribute.car": "Charisma",
+  "SRR.T20.short.for": "Str", "SRR.T20.short.des": "Dex", "SRR.T20.short.con": "Con", "SRR.T20.short.int": "Int", "SRR.T20.short.sab": "Wis", "SRR.T20.short.car": "Cha",
+  "SRR.T20.save.fort": "Fortitude", "SRR.T20.save.refl": "Reflexes", "SRR.T20.save.vont": "Will",
+  "SRR.T20.skill.acro": "Acrobatics", "SRR.T20.skill.perc": "Perception", "SRR.T20.skill.inic": "Initiative", "SRR.T20.skill.luta": "Fight",
+  "SRR.T20.skill.alfa": "Craft: Tailor"};
+
+function withT20Game(extra={}, fn) {
+  globalThis.game = {i18n: {has: key => key in t20Texts, localize: key => t20Texts[key] ?? key, lang: "en"}, ...extra};
+  try {
+    return fn();
+  } finally {
+    delete globalThis.game;
+  }
+}
+
+test("Tormenta20 offers the attributes, the three saves and every skill but the crafting stub", () => {
+  withT20Game({}, () => {
+    const groups = tormenta20Groups(T20);
+    assert.deepEqual(groups.map(g => g.type), ["attribute", "save", "skill"]);
+    assert.deepEqual(groups[0].options.map(o => o.key), ["for", "des", "con", "int", "sab", "car"]);
+    assert.deepEqual(groups[0].options.map(o => o.label), ["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"]);
+    // The attribute buttons are narrow: they show the three letters and name the attribute in the tooltip
+    assert.deepEqual(groups[0].options.map(o => o.short), ["Str", "Dex", "Con", "Int", "Wis", "Cha"]);
+    assert.deepEqual(groups[1].options.map(o => o.label), ["Fortitude", "Reflexes", "Will"]);
+    // The saves are skills of the system, they get their own group and stay out of the skills
+    assert.deepEqual(groups[2].options.map(o => o.key), ["acro", "alfa", "luta", "inic", "perc"]);
+    assert.ok(groups.every(g => g.options.every(o => o.icon)));
+    assert.equal(groups[2].options.find(o => o.key === "alfa").label, "Craft: Tailor");
+    // A skill a newer version adds falls back to the name the system gives it
+    assert.equal(tormenta20Label("skill", "nova", "New skill"), "New skill");
+    assert.deepEqual(tormenta20Groups({}).map(g => g.type), ["attribute", "save"]);
+  });
+});
+
+test("Tormenta20: the keys of the roll are the ones the system reads, a quick roll acts as if the skipping key was held", () => {
+  const plain = {type: "skill", key: "perc", advantage: "normal"};
+  assert.deepEqual(tormenta20RollArgs(plain, {}).event, {shiftKey: false, altKey: false, ctrlKey: false, metaKey: false});
+  assert.equal(tormenta20RollArgs(plain, {fastForward: true}).event.shiftKey, true);
+  // The system opens its dialog with Shift when the client setting says so: a quick roll must not hold it then
+  assert.equal(tormenta20RollArgs(plain, {fastForward: true, skipsWithShift: false}).event.shiftKey, false);
+  assert.equal(tormenta20RollArgs({...plain, advantage: "advantage"}, {}).event.altKey, true);
+  assert.equal(tormenta20RollArgs({...plain, advantage: "disadvantage"}, {}).event.ctrlKey, true);
+  // A real click keeps its keys, the hint of the request wins over a held key of the other kind
+  const click = {shiftKey: true, altKey: true, ctrlKey: false};
+  assert.deepEqual(tormenta20RollArgs(plain, {event: click}).event, {shiftKey: true, altKey: true, ctrlKey: false, metaKey: false});
+  assert.deepEqual(tormenta20RollArgs({...plain, advantage: "disadvantage"}, {event: click}).event, {shiftKey: true, altKey: false, ctrlKey: true, metaKey: false});
+});
+
+test("Tormenta20: Shift skips the dialog unless the client setting turns it round", () => {
+  const settings = value => ({settings: {get: () => value}});
+  assert.equal(withT20Game(settings("default"), () => shiftSkipsDialog()), true);
+  assert.equal(withT20Game(settings("shift"), () => shiftSkipsDialog()), false);
+  assert.equal(withT20Game({}, () => shiftSkipsDialog()), true);
+});
+
+test("Tormenta20 knows characters, rolls through the actor and judges the plain total", async () => {
+  assert.equal(tormenta20.isCharacter({type: "character"}), true);
+  assert.equal(tormenta20.isCharacter({type: "npc"}), false);
+  assert.equal(tormenta20.advantage, true);
+  assert.equal(tormenta20.scheme, "d20");
+  const calls = [];
+  const actor = {name: "Ayla", system: {atributos: {for: {}}, pericias: {perc: {}, fort: {}}},
+    rollAtributo: async (key, args) => { calls.push(["attribute", key, args.event]); },
+    rollPericia: async (key, args) => { calls.push(["pericia", key, args.event]); }};
+  await withT20Game({settings: {get: () => "default"}}, async () => {
+    await tormenta20.roll(actor, {type: "attribute", key: "for", advantage: "normal"}, {fastForward: true});
+    await tormenta20.roll(actor, {type: "skill", key: "perc", advantage: "advantage"}, {fastForward: false});
+    await tormenta20.roll(actor, {type: "save", key: "fort", advantage: "normal"}, {});
+    await assert.rejects(tormenta20.roll(actor, {type: "skill", key: "acro"}, {}), /has no acro/);
+    await assert.rejects(tormenta20.roll(actor, {type: "attribute", key: "des"}, {}), /has no des/);
+  });
+  assert.deepEqual(calls.map(c => c.slice(0, 2)), [["attribute", "for"], ["pericia", "perc"], ["pericia", "fort"]]);
+  assert.equal(calls[0][2].shiftKey, true);
+  assert.equal(calls[1][2].altKey, true);
+  assert.equal(calls[1][2].shiftKey, false);
+  const roll = (total, natural) => ({total, dice: [{faces: 20, results: [{result: natural}]}]});
+  assert.deepEqual(tormenta20.evaluate(message([roll(16, 11)]), {type: "skill", dc: 15}), {total: 16, natural: 11, success: true, degree: "success"});
+  assert.deepEqual(tormenta20.evaluate(message([roll(14, 20)]), {type: "skill", dc: 15}), {total: 14, natural: 20, success: false, degree: "failure"});
+  assert.equal(tormenta20.evaluate(message([roll(14, 2)]), {type: "skill", dc: null}).success, null);
+});
+
+test("Tormenta20: the card of an item is no answer to a request, the card of a test is accepted", () => {
+  const request = {type: "skill", key: "perc"};
+  assert.equal(tormenta20.matches(message([], {tormenta20: {itemData: {rolls: []}}}), request), false);
+  assert.equal(tormenta20.matches(message([], {tormenta20: {rollTotal: 12}}), request), null);
+  assert.equal(tormenta20.matches(message([]), {type: "formula"}), null);
 });

@@ -6,13 +6,15 @@
 import {judge} from "../request-model.mjs";
 import {firstTotal, naturalD20, rollFormula} from "./common.mjs";
 import {crucible} from "./crucible.mjs";
+import {daggerheart} from "./daggerheart.mjs";
 import {dnd5e} from "./dnd5e.mjs";
 import {pf2e} from "./pf2e.mjs";
 import {swade} from "./swade.mjs";
+import {tormenta20} from "./tormenta20.mjs";
 
 /** Every system adapter by system id. */
 /** Starfinder 2e is built on the Pathfinder 2e engine and shares its adapter. */
-export const ADAPTERS = {dnd5e, pf2e, sf2e: pf2e, swade, crucible};
+export const ADAPTERS = {dnd5e, pf2e, sf2e: pf2e, swade, crucible, daggerheart, tormenta20};
 
 /** The adapter for any other system: formula rolls only. */
 export const generic = {

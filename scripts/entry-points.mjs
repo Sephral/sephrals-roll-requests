@@ -15,6 +15,20 @@ export function hudTargets(clicked) {
 }
 
 /**
+ * The HUD button without its click handler (also shown by the sample window).
+ * @returns {HTMLButtonElement}
+ */
+export function hudButton() {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "control-icon srr-hud-button";
+  button.dataset.tooltip = t("SRR.Hud.button");
+  button.setAttribute("aria-label", t("SRR.Hud.button"));
+  button.innerHTML = '<i class="fa-solid fa-dice-d20" inert></i>';
+  return button;
+}
+
+/**
  * Hook "renderTokenHUD": a button that opens the request window for this token or the selected ones (GM).
  * @param {foundry.applications.hud.TokenHUD} hud
  * @param {HTMLElement} element
@@ -24,12 +38,7 @@ export function onRenderTokenHUD(hud, element) {
   const root = element instanceof HTMLElement ? element : element?.[0];
   const column = root?.querySelector(".col.left") ?? root?.querySelector(".col.right");
   if ( !column || column.querySelector(".srr-hud-button") || !hud.document?.actor ) return;
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "control-icon srr-hud-button";
-  button.dataset.tooltip = t("SRR.Hud.button");
-  button.setAttribute("aria-label", t("SRR.Hud.button"));
-  button.innerHTML = '<i class="fa-solid fa-dice-d20" inert></i>';
+  const button = hudButton();
   button.addEventListener("click", event => {
     event.preventDefault();
     event.stopPropagation();

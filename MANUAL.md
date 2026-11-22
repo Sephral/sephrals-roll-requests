@@ -56,7 +56,7 @@ The card lists every character with its result. As the GM you see every total, p
 * A reroll with a hero point (Pathfinder 2e) or a benny (Savage Worlds) replaces the result of that character, when it comes from the same player or a GM. The reroll keeps the visibility of the request.
 * When two requests wait for the same character, each roll goes to the request that asked for that kind of roll.
 
-A natural 20 and a natural 1 are marked in d20 systems. Pathfinder 2e shows the four degrees of success, Savage Worlds counts raises, Crucible judges like the system: above the DC is a success, by more than 6 a critical one (or the margin the check itself carries).
+A natural 20 and a natural 1 are marked in d20 systems. Pathfinder 2e shows the four degrees of success, Savage Worlds counts raises, Crucible judges like the system: above the DC is a success, by more than 6 a critical one (or the margin the check itself carries). Daggerheart judges against the difficulty: the total has to reach it, and Hope and Fear showing the same number is a critical success that beats any difficulty.
 
 ## For players
 
@@ -72,9 +72,38 @@ What you see on the card depends on the request: in public requests every total,
 | Pathfinder 2e, Starfinder 2e | Perception, saving throws, skills (lore skills with an own formula such as `1d20 + @actor.skills.warfare-lore.mod`), flat checks (one d20 without modifiers, judged as success or failure only, a natural 20 or 1 changes nothing; fortune and misfortune roll two d20) |
 | Savage Worlds (SWADE) | Attributes, skills (the core skills and the skills of the characters). A character without the skill makes an unskilled attempt |
 | Crucible | Skills |
+| Daggerheart | Traits (Agility, Strength, Finesse, Instinct, Presence, Knowledge), reaction rolls with the same six traits, experiences of the chosen characters. See *Daggerheart* below |
+| Tormenta20 | Attributes, the three saving throws, skills (initiative is a skill). See *Tormenta20* below |
 | Any other system | Own formulas with the character's roll data |
 
 With a hidden DC, D&D 5e and Pathfinder 2e roll without it, so their own chat cards show no success. Crucible then judges its card against its default DC, the Roll Requests card judges against yours.
+
+## Daggerheart
+
+Rolls go through the character's own duality roll, so the system's roll dialog, its Hope and Fear automation and every module that watches rolls see a normal roll.
+
+* **Trait rolls** ask for one of the six traits. The request window calls the DC the *difficulty*, offers the chips 8 to 20 and the advantage and disadvantage buttons (the system adds its d6 for them).
+* **Reaction rolls** are the same traits as a reaction roll of the system: they move no Hope and no Fear.
+* **Experiences** lists the experiences of the characters you chose. A character rolls its strongest trait with the experience already selected, so its bonus counts and it costs the Hope the system asks for. In the roll dialog a player can still switch the trait or the experience. Rolls you make for a character skip the dialog and keep the choice.
+* **The card** shows the total, pass or fail against the difficulty, and a mark for Hope, Fear or a critical success (equal dice) next to each result. Players see the mark wherever they see the total. With a hidden difficulty the system rolls without it, like in other systems.
+* **Secret rolls** (silent requests, *Roll secretly for all*) post no chat message, move no Hope, Fear or countdown, run no system triggers, and keep the result on the GM card, so the Fear pool never gives a secret roll away. If a secret roll should count, apply Hope, Fear and countdowns yourself.
+* **Group checks** use the usual rule of the request (half, all or one succeed). The system's own group action roll with a leader and helpers stays separate and is not replaced.
+* **Party:** the scope *Party* takes the characters of the active party of the world.
+* **Adversaries and other actors without traits** roll a plain d20 against the difficulty.
+* Trait names follow the language of the Daggerheart system. Daggerheart itself needs Foundry 14.364 or newer.
+* The self test checks `rollTrait` on a character. Verified with Daggerheart 2.12.9 on Foundry 14.370.
+
+## Tormenta20
+
+Rolls go through the character's own tests, so the roll dialog of the system, its bonuses and its chat card stay as players know them. Tormenta20 runs on Foundry 14 only.
+
+* **Rolls:** the six attributes, the three saving throws and every skill, initiative and the crafting skills included. The saves are skills of the system, so they have their own group and stay out of the skills.
+* **The window** calls the DC the *DC*, offers the chips 10 to 40 and the advantage and disadvantage buttons. Both roll two d20 and keep the higher or the lower one, like the Alt and Ctrl keys of the system.
+* **The card** shows the total and pass or fail against the DC. The system knows no degrees of success and no automatic result on a natural 20, so the card judges the plain total.
+* **The dialog:** players get the dialog of the system. Rolls you make for a character skip it. Which key skips the dialog follows the client setting of the system, so a quick roll works whichever way it is set.
+* **Item cards:** the card of a weapon, spell or power is never taken for an answer, only a test is.
+* **Names:** skills and attributes carry the module's own English and German names. The crafting skills read Craft followed by the trade.
+* The self test checks `rollAtributo` and `rollPericia` on a character. Verified with Tormenta20 1.6.7 on Foundry 14.370.
 
 ## Keys
 
@@ -157,6 +186,7 @@ Each request lives in its chat message. Deleting the card deletes the request. T
 | `rollRemaining(messageId)` | Rolls for every character that has not rolled (GM) |
 | `reset(messageId, actorUuid)` | Takes a result back (GM) |
 | `runSelfTest()` | The self test (GM) |
+| `samples()` | The sample windows and cards: a list of `{id, label, group, open()}`, each `open()` shows a real window or card with made-up requests and saves nothing (for translators and testing) |
 | `saveDebugFile()` | Saves the debug file of Sephral’s modules (GM) |
 
 Example:

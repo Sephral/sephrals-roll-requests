@@ -133,6 +133,11 @@
   white-space: nowrap;
 }
 
+/* A Daggerheart result is wide: the name keeps its room and the result moves below it when the card is narrow */
+.srr-entry:has(.srr-duality) .srr-entry-name {
+  flex: 1 1 6.5rem;
+}
+
 .srr-entry-name small {
   display: block;
   color: var(--srr-muted);

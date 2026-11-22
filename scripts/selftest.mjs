@@ -12,7 +12,9 @@ const METHODS = {
   dnd5e: {save: "rollSavingThrow", check: "rollAbilityCheck", skill: "rollSkill", tool: "rollToolCheck", combat: "rollDeathSave"},
   pf2e: {save: "getStatistic", skill: "getStatistic"},
   swade: {attribute: "rollAttribute", skill: "rollSkill"},
-  crucible: {skill: "rollSkill"}
+  crucible: {skill: "rollSkill"},
+  daggerheart: {trait: "rollTrait", reaction: "rollTrait"},
+  tormenta20: {attribute: "rollAtributo", skill: "rollPericia", save: "rollPericia"}
 };
 
 /**

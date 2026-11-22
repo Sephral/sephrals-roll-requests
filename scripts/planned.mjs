@@ -298,11 +298,20 @@ export function onRenderBehaviorConfig(app, html) {
   const input = element?.querySelector('input[name="system.check"]');
   if ( !input ) return;
   const scene = app.document?.parent?.parent ?? canvas?.scene;
-  const list = planned(scene);
+  input.replaceWith(checkSelect(input.value, planned(scene)));
+}
+
+/**
+ * The choice of the planned checks of a scene, for the check field of the Region behavior.
+ * @param {string} value        The stored check id
+ * @param {object[]} list       The planned checks
+ * @returns {HTMLSelectElement}
+ */
+export function checkSelect(value, list) {
   const select = document.createElement("select");
   select.name = "system.check";
   const options = [{id: "", text: t("SRR.BEHAVIOR.none")}, ...list.map(item => ({id: item.id, text: describePlanned(item)}))];
-  if ( input.value && !list.some(item => item.id === input.value) ) options.push({id: input.value, text: t("SRR.Planned.gone")});
-  select.innerHTML = options.map(o => `<option value="${esc(o.id)}"${o.id === input.value ? " selected" : ""}>${esc(o.text)}</option>`).join("");
-  input.replaceWith(select);
+  if ( value && !list.some(item => item.id === value) ) options.push({id: value, text: t("SRR.Planned.gone")});
+  select.innerHTML = options.map(o => `<option value="${esc(o.id)}"${o.id === value ? " selected" : ""}>${esc(o.text)}</option>`).join("");
+  return select;
 }

@@ -22,7 +22,7 @@ export function metaLine(request, dcVisible) {
   const dcKey = `SRR.Card.${adapter.dcName ?? "dc"}`;
   if ( request.dc !== null ) {
     if ( dcVisible ) parts.push(t(dcKey, {dc: request.dc}) + (request.showDc ? "" : ` (${t("SRR.Card.hidden")})`));
-    else parts.push(t("SRR.Card.dcHidden"));
+    else parts.push(t(game.i18n.has(`SRR.Card.${adapter.dcName}Hidden`) ? `SRR.Card.${adapter.dcName}Hidden` : "SRR.Card.dcHidden"));
   }
   // Savage Worlds always rolls against a target number, 4 unless the GM set one
   else if ( Number.isFinite(adapter.defaultDc) ) parts.push(t(dcKey, {dc: adapter.defaultDc}));
@@ -53,6 +53,17 @@ function outcomeText(result, scheme) {
   if ( (scheme === "swade") && (result.raises > 0) ) return t("SRR.Outcome.raises", {count: result.raises});
   const degree = (scheme === "d20") ? (result.success ? "success" : "failure") : (result.degree ?? "");
   return game.i18n.has(`SRR.Outcome.${degree}`) ? t(`SRR.Outcome.${degree}`) : "";
+}
+
+/**
+ * The mark of a Daggerheart roll: made with Hope, with Fear, or a critical success.
+ * @param {string} duality   hope, fear or critical
+ * @returns {string}
+ */
+export function dualityChip(duality) {
+  const icons = {hope: "fa-sun", fear: "fa-moon", critical: "fa-star"};
+  if ( !icons[duality] ) return "";
+  return `<span class="srr-duality is-${duality}" data-tooltip="${esc(t(`SRR.Duality.${duality}Long`))}"><i class="fa-solid ${icons[duality]}" inert></i>${esc(t(`SRR.Duality.${duality}`))}</span>`;
 }
 
 /**
@@ -96,12 +107,14 @@ function resultCell(request, entry, view, rollable) {
   const scheme = getAdapter(request.system).scheme;
   const natural = (result.natural === 20) ? `<i class="fa-solid fa-star srr-nat srr-nat-20" data-tooltip="${esc(t("SRR.Card.nat20"))}" inert></i>`
     : (result.natural === 1) ? `<i class="fa-solid fa-skull srr-nat srr-nat-1" data-tooltip="${esc(t("SRR.Card.nat1"))}" inert></i>` : "";
-  const outcome = shown.outcome ? outcomeText(result, scheme) : "";
+  // Daggerheart: the Hope or Fear of the roll shows with the total, a critical success says it itself
+  const duality = result.duality ? dualityChip(result.duality) : "";
+  const outcome = (shown.outcome && !(duality && (result.degree === "criticalSuccess"))) ? outcomeText(result, scheme) : "";
   const icon = !shown.outcome || (result.success === null) ? ""
     : result.success ? `<i class="fa-solid fa-circle-check srr-pass" inert></i>`
     : `<i class="fa-solid fa-circle-xmark srr-fail" inert></i>`;
   return `<span class="srr-outcome">${natural}<strong class="srr-total">${esc(result.total)}</strong>${icon}`
-    + `${outcome ? `<small>${esc(outcome)}</small>` : ""}</span>`;
+    + `${outcome ? `<small>${esc(outcome)}</small>` : ""}${duality}</span>`;
 }
 
 /**

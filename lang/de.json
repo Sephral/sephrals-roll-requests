@@ -123,11 +123,13 @@
       "showDc": "Spieler sehen ihn",
       "secret": {
         "dc": "Geheimer SG",
-        "tn": "Geheimer MW"
+        "tn": "Geheimer MW",
+        "difficulty": "Geheime Schwierigkeit"
       },
       "secretValue": {
         "dc": "geheimer SG {dc}",
-        "tn": "geheimer MW {dc}"
+        "tn": "geheimer MW {dc}",
+        "difficulty": "geheime Schwierigkeit {dc}"
       },
       "advantage": "Wurf",
       "mode": "Ergebnis",
@@ -164,7 +166,8 @@
       "repeatHint": "Noch einmal senden: {what}",
       "recent": "Zuletzt gesendet",
       "repeatNoActors": "Keiner der Charaktere dieser Anfrage existiert noch.",
-      "recentRemove": "Diese Anfrage vergessen"
+      "recentRemove": "Diese Anfrage vergessen",
+      "difficulty": "Schwierigkeit"
     },
     "Section": {
       "save": "Rettung",
@@ -175,7 +178,10 @@
       "combat": "Kampf",
       "passive": "Passiv",
       "formula": "Formel",
-      "flat": "Einfache Probe"
+      "flat": "Einfache Probe",
+      "trait": "Eigenschaften",
+      "reaction": "Reaktion",
+      "experience": "Erfahrung"
     },
     "Roll": {
       "initiative": "Initiative",
@@ -226,7 +232,10 @@
       "formula": "Eigene Formel",
       "flat": "Einfache Proben",
       "combat": "Kampf und Rast",
-      "passive": "Passive Werte"
+      "passive": "Passive Werte",
+      "trait": "Eigenschaftswürfe",
+      "reaction": "Reaktionswürfe",
+      "experience": "Erfahrungen"
     },
     "Label": {
       "save": "Rettungswurf: {name}",
@@ -235,7 +244,10 @@
       "tool": "{name}",
       "attribute": "{name}",
       "combat": "{name}",
-      "passive": "Passiv: {name}"
+      "passive": "Passiv: {name}",
+      "trait": "Probe auf {name}",
+      "reaction": "Reaktionswurf auf {name}",
+      "experience": "Erfahrung: {name}"
     },
     "Mode": {
       "public": "Öffentlich",
@@ -278,7 +290,9 @@
         "half": "Gruppenprobe",
         "all": "Gruppenprobe, alle müssen es schaffen",
         "any": "Gruppenprobe, einer reicht"
-      }
+      },
+      "difficulty": "Schwierigkeit {dc}",
+      "difficultyHidden": "Geheime Schwierigkeit"
     },
     "Outcome": {
       "success": "Erfolg",
@@ -328,6 +342,128 @@
       "Hint": "Speichert eine Datei für Fehlerberichte über alle Module von Sephral in dieser Welt: Versionen, Einstellungen und was die Module aufgezeichnet haben, etwa die letzten Chatnachrichten, die sie gelesen haben. Sie enthält Chattext und Flüsternachrichten, prüfe sie vor dem Teilen.",
       "Entry": "Debug-Datei speichern (Sephral’s Module)",
       "Saved": "Debug-Datei {file} gespeichert. Sie enthält Chattext und Flüsternachrichten, prüfe sie vor dem Teilen."
+    },
+    "Duality": {
+      "hope": "Hoffnung",
+      "fear": "Furcht",
+      "critical": "Kritisch",
+      "hopeLong": "Mit Hoffnung gewürfelt",
+      "fearLong": "Mit Furcht gewürfelt",
+      "criticalLong": "Kritischer Erfolg: Hoffnung und Furcht sind gleich"
+    },
+    "T20": {
+      "attribute": {
+        "for": "Stärke",
+        "des": "Geschick",
+        "con": "Konstitution",
+        "int": "Intelligenz",
+        "sab": "Weisheit",
+        "car": "Charisma"
+      },
+      "short": {
+        "for": "Stä",
+        "des": "Ges",
+        "con": "Kon",
+        "int": "Int",
+        "sab": "Wei",
+        "car": "Cha"
+      },
+      "save": {
+        "fort": "Zähigkeit",
+        "refl": "Reflexe",
+        "vont": "Willenskraft"
+      },
+      "skill": {
+        "acro": "Akrobatik",
+        "ades": "Tierführung",
+        "atle": "Athletik",
+        "atua": "Darbietung",
+        "cava": "Reiten",
+        "conh": "Wissen",
+        "cura": "Heilkunde",
+        "dipl": "Diplomatie",
+        "enga": "Täuschung",
+        "furt": "Heimlichkeit",
+        "guer": "Kriegskunst",
+        "inic": "Initiative",
+        "inti": "Einschüchtern",
+        "intu": "Intuition",
+        "inve": "Nachforschung",
+        "joga": "Glücksspiel",
+        "ladi": "Diebeskunst",
+        "luta": "Nahkampf",
+        "mist": "Mystik",
+        "nobr": "Adel",
+        "perc": "Wahrnehmung",
+        "pilo": "Steuern",
+        "pont": "Zielen",
+        "reli": "Religion",
+        "sobr": "Überleben",
+        "alfa": "Handwerk: Schneider",
+        "alqu": "Handwerk: Alchemist",
+        "arme": "Handwerk: Waffenschmied",
+        "arte": "Handwerk: Künstler",
+        "cozi": "Handwerk: Koch",
+        "enge": "Handwerk: Tüftler"
+      }
+    },
+    "Sample": {
+      "group": {
+        "window": "Anfragefenster",
+        "player": "Spielerfenster",
+        "card": "Ergebniskarte",
+        "system": "Ergebniskarte anderer Systeme",
+        "dialog": "Dialoge und Teile"
+      },
+      "entry": {
+        "request": "Anfragefenster mit gesendeten und geplanten Anfragen",
+        "prompt": "Spielerfenster: Würfe warten",
+        "promptChoice": "Spielerfenster: Wahl zwischen Würfen",
+        "addPlayer": "Dialog Spieler hinzufügen",
+        "addPlayerEmpty": "Dialog Spieler hinzufügen (keiner übrig)",
+        "plan": "Dialog Probe planen",
+        "hud": "Token-HUD-Knopf und Menüeintrag im Verzeichnis",
+        "behavior": "Regionsverhalten: geplante Probe ausführen",
+        "card": {
+          "half": "Karte: Gruppenprobe läuft",
+          "all": "Karte: Gruppenprobe, alle müssen bestehen",
+          "any": "Karte: Gruppenprobe, einer genügt",
+          "secret": "Karte: geheimer SG, nur SL",
+          "blind": "Karte: verdeckte Ergebnisse",
+          "choice": "Karte: Wahl zwischen Würfen",
+          "formula": "Karte: Formelwurf",
+          "passive": "Karte: passive Werte",
+          "pf2e": "Karte: Pathfinder 2e",
+          "swade": "Karte: Savage Worlds",
+          "crucible": "Karte: Crucible",
+          "daggerheart": "Karte: Daggerheart"
+        }
+      },
+      "roll": {
+        "perception": "Wahrnehmung",
+        "dexterity": "Geschicklichkeit",
+        "strength": "Stärke",
+        "stealth": "Heimlichkeit",
+        "insight": "Motiv erkennen",
+        "athletics": "Athletik",
+        "acrobatics": "Akrobatik",
+        "survival": "Überleben",
+        "investigation": "Nachforschungen",
+        "constitution": "Konstitution",
+        "wisdom": "Weisheit",
+        "reflex": "Reflex",
+        "fighting": "Kämpfen",
+        "agility": "Gewandtheit"
+      },
+      "note": {
+        "ledge": "Der Felsvorsprung bricht unter euren Füßen weg.",
+        "wall": "Die Wand ist nass und glatt.",
+        "door": "Hinter der Tür bewegt sich etwas.",
+        "formulaLabel": "Luft anhalten",
+        "formulaNote": "Das Wasser steigt.",
+        "plannedBridge": "Hinterhalt an der Brücke",
+        "plannedRiver": "Kalter Fluss"
+      }
     }
   }
 }

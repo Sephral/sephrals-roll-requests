@@ -152,7 +152,8 @@ export function entriesFrom(sources) {
  * @returns {string}
  */
 function plainContent(request) {
-  const dc = (request.dc !== null) && request.showDc ? ` (${t("SRR.Card.dc", {dc: request.dc})})` : "";
+  const dcKey = `SRR.Card.${getAdapter(request.system).dcName ?? "dc"}`;
+  const dc = (request.dc !== null) && request.showDc ? ` (${t(dcKey, {dc: request.dc})})` : "";
   const names = request.entries.map(e => `<li>${esc(e.name)}</li>`).join("");
   return `<p><strong>${esc(describe(request))}</strong>${esc(dc)}</p><ul>${names}</ul>`;
 }
@@ -204,6 +205,9 @@ export async function createRequest(input={}) {
   if ( request.type === "passive" ) countFeature(MODULE_ID, "passive");
   else if ( request.mode === "silent" ) countFeature(MODULE_ID, "silent");
   if ( request.choices.length ) countFeature(MODULE_ID, "choice");
+  const kinds = request.choices.length ? request.choices.map(c => c.type) : [request.type];
+  if ( kinds.includes("reaction") ) countFeature(MODULE_ID, "reactionRequest");
+  if ( kinds.includes("experience") ) countFeature(MODULE_ID, "experienceRequest");
   Hooks.callAll(HOOKS.requested, publicResult(request, message.id));
   if ( request.type === "passive" ) {
     Hooks.callAll(HOOKS.completed, publicResult(request, message.id));

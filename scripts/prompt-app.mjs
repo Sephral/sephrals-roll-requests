@@ -42,9 +42,17 @@ export class RollPrompt extends ApplicationV2 {
     }).filter(item => item.entries.length);
   }
 
+  /**
+   * The open requests this window shows. A sample window gives made-up ones.
+   * @returns {{card: {id: string}, request: object, entries: object[]}[]}
+   */
+  items() {
+    return RollPrompt.items();
+  }
+
   /** @override */
   async _prepareContext() {
-    return {items: RollPrompt.items(), theme: setting("theme")};
+    return {items: this.items(), theme: setting("theme")};
   }
 
   /** @override */

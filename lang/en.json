@@ -123,11 +123,13 @@
       "showDc": "Players see it",
       "secret": {
         "dc": "Secret DC",
-        "tn": "Secret TN"
+        "tn": "Secret TN",
+        "difficulty": "Secret difficulty"
       },
       "secretValue": {
         "dc": "secret DC {dc}",
-        "tn": "secret TN {dc}"
+        "tn": "secret TN {dc}",
+        "difficulty": "secret difficulty {dc}"
       },
       "advantage": "Roll",
       "mode": "Results",
@@ -164,7 +166,8 @@
       "repeatHint": "Send again: {what}",
       "recent": "Sent lately",
       "repeatNoActors": "None of the characters of that request exist any more.",
-      "recentRemove": "Forget this request"
+      "recentRemove": "Forget this request",
+      "difficulty": "Difficulty"
     },
     "Section": {
       "save": "Save",
@@ -175,7 +178,10 @@
       "combat": "Combat",
       "passive": "Passive",
       "formula": "Formula",
-      "flat": "Flat check"
+      "flat": "Flat check",
+      "trait": "Traits",
+      "reaction": "Reaction",
+      "experience": "Experience"
     },
     "Roll": {
       "initiative": "Initiative",
@@ -226,7 +232,10 @@
       "formula": "Own formula",
       "flat": "Flat checks",
       "combat": "Combat and rest",
-      "passive": "Passive values"
+      "passive": "Passive values",
+      "trait": "Trait rolls",
+      "reaction": "Reaction rolls",
+      "experience": "Experiences"
     },
     "Label": {
       "save": "{name} saving throw",
@@ -235,7 +244,10 @@
       "tool": "{name}",
       "attribute": "{name}",
       "combat": "{name}",
-      "passive": "Passive {name}"
+      "passive": "Passive {name}",
+      "trait": "{name} roll",
+      "reaction": "{name} reaction roll",
+      "experience": "Experience: {name}"
     },
     "Mode": {
       "public": "Public",
@@ -278,7 +290,9 @@
         "half": "Group check",
         "all": "Group check, everyone must pass",
         "any": "Group check, one is enough"
-      }
+      },
+      "difficulty": "Difficulty {dc}",
+      "difficultyHidden": "Secret difficulty"
     },
     "Outcome": {
       "success": "Success",
@@ -328,6 +342,128 @@
       "Hint": "Saves one file for bug reports about all of Sephral’s modules in this world: versions, settings and what the modules recorded, such as the latest chat messages they read. It contains chat text and whispers, check it before you share it.",
       "Entry": "Save Debug File (Sephral’s Modules)",
       "Saved": "Debug file {file} saved. It contains chat text and whispers, check it before you share it."
+    },
+    "Duality": {
+      "hope": "Hope",
+      "fear": "Fear",
+      "critical": "Critical",
+      "hopeLong": "Rolled with Hope",
+      "fearLong": "Rolled with Fear",
+      "criticalLong": "Critical success: Hope and Fear are equal"
+    },
+    "T20": {
+      "attribute": {
+        "for": "Strength",
+        "des": "Dexterity",
+        "con": "Constitution",
+        "int": "Intelligence",
+        "sab": "Wisdom",
+        "car": "Charisma"
+      },
+      "short": {
+        "for": "Str",
+        "des": "Dex",
+        "con": "Con",
+        "int": "Int",
+        "sab": "Wis",
+        "car": "Cha"
+      },
+      "save": {
+        "fort": "Fortitude",
+        "refl": "Reflexes",
+        "vont": "Will"
+      },
+      "skill": {
+        "acro": "Acrobatics",
+        "ades": "Animal Handling",
+        "atle": "Athletics",
+        "atua": "Performance",
+        "cava": "Ride",
+        "conh": "Knowledge",
+        "cura": "Healing",
+        "dipl": "Diplomacy",
+        "enga": "Deception",
+        "furt": "Stealth",
+        "guer": "Warcraft",
+        "inic": "Initiative",
+        "inti": "Intimidation",
+        "intu": "Intuition",
+        "inve": "Investigation",
+        "joga": "Gambling",
+        "ladi": "Thievery",
+        "luta": "Fight",
+        "mist": "Mysticism",
+        "nobr": "Nobility",
+        "perc": "Perception",
+        "pilo": "Piloting",
+        "pont": "Aiming",
+        "reli": "Religion",
+        "sobr": "Survival",
+        "alfa": "Craft: Tailor",
+        "alqu": "Craft: Alchemist",
+        "arme": "Craft: Armorer",
+        "arte": "Craft: Artisan",
+        "cozi": "Craft: Cook",
+        "enge": "Craft: Engineer"
+      }
+    },
+    "Sample": {
+      "group": {
+        "window": "Request window",
+        "player": "Player window",
+        "card": "Result card",
+        "system": "Result card of other systems",
+        "dialog": "Dialogs and parts"
+      },
+      "entry": {
+        "request": "Request window with sent and planned requests",
+        "prompt": "Player window: rolls waiting",
+        "promptChoice": "Player window: choice of rolls",
+        "addPlayer": "Add player dialog",
+        "addPlayerEmpty": "Add player dialog (nobody left)",
+        "plan": "Plan this check dialog",
+        "hud": "Token HUD button and directory menu entry",
+        "behavior": "Region behavior: run planned check",
+        "card": {
+          "half": "Card: group check in progress",
+          "all": "Card: group check, everyone must pass",
+          "any": "Card: group check, one is enough",
+          "secret": "Card: secret DC, GM only",
+          "blind": "Card: blind results",
+          "choice": "Card: choice of rolls",
+          "formula": "Card: formula roll",
+          "passive": "Card: passive values",
+          "pf2e": "Card: Pathfinder 2e",
+          "swade": "Card: Savage Worlds",
+          "crucible": "Card: Crucible",
+          "daggerheart": "Card: Daggerheart"
+        }
+      },
+      "roll": {
+        "perception": "Perception",
+        "dexterity": "Dexterity",
+        "strength": "Strength",
+        "stealth": "Stealth",
+        "insight": "Insight",
+        "athletics": "Athletics",
+        "acrobatics": "Acrobatics",
+        "survival": "Survival",
+        "investigation": "Investigation",
+        "constitution": "Constitution",
+        "wisdom": "Wisdom",
+        "reflex": "Reflex",
+        "fighting": "Fighting",
+        "agility": "Agility"
+      },
+      "note": {
+        "ledge": "The ledge crumbles under your feet.",
+        "wall": "The wall is wet and slippery.",
+        "door": "Something moves behind the door.",
+        "formulaLabel": "Hold your breath",
+        "formulaNote": "The water rises.",
+        "plannedBridge": "Ambush on the bridge",
+        "plannedRiver": "Cold river"
+      }
     }
   }
 }

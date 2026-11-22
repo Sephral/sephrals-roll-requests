@@ -13,7 +13,7 @@ export const MODES = ["public", "gm", "blind", "silent"];
 export const GROUP_RULES = ["half", "all", "any"];
 
 /** Roll types the players can get to choose between. */
-export const CHOOSABLE = ["save", "check", "skill", "tool", "attribute"];
+export const CHOOSABLE = ["save", "check", "skill", "tool", "attribute", "trait", "reaction", "experience"];
 
 /** The advantage hint of a request. */
 export const ADVANTAGE = ["normal", "advantage", "disadvantage"];
@@ -159,15 +159,16 @@ const DEGREES = ["criticalFailure", "failure", "success", "criticalSuccess"];
  * @param {number} roll.total
  * @param {number|null} [roll.natural]      The kept d20 (d20 systems)
  * @param {number|null} dc
- * @param {"d20"|"pf2e"|"swade"|"crucible"} [scheme="d20"]
+ * @param {"d20"|"pf2e"|"swade"|"crucible"|"daggerheart"} [scheme="d20"]
  * @param {object} [extra]
  * @param {boolean} [extra.critfail]        Savage Worlds: snake eyes on trait and wild die
  * @param {string|null} [extra.outcome]     A degree the system has decided itself (PF2e)
  * @param {number|null} [extra.critical]    Crucible: margin above the DC for a critical success (default 6)
  * @param {number|null} [extra.fumble]      Crucible: margin below the DC for a critical failure (default 6)
+ * @param {boolean} [extra.crit]            Daggerheart: Hope and Fear show the same number, which always succeeds
  * @returns {{success: boolean|null, degree: string|null, raises?: number}}
  */
-export function judge({total, natural=null}, dc, scheme="d20", {critfail=false, outcome=null, critical=null, fumble=null}={}) {
+export function judge({total, natural=null}, dc, scheme="d20", {critfail=false, outcome=null, critical=null, fumble=null, crit=false}={}) {
   if ( !Number.isFinite(total) ) return {success: null, degree: null};
   if ( scheme === "swade" ) {
     const tn = Number.isFinite(dc) ? dc : 4;
@@ -177,6 +178,12 @@ export function judge({total, natural=null}, dc, scheme="d20", {critfail=false, 
     return {success: true, degree: raises > 0 ? "criticalSuccess" : "success", raises};
   }
   if ( !Number.isFinite(dc) ) return {success: null, degree: null};
+  if ( scheme === "daggerheart" ) {
+    // A critical success beats any difficulty, otherwise the total has to reach it
+    if ( crit ) return {success: true, degree: "criticalSuccess"};
+    const success = total >= dc;
+    return {success, degree: success ? "success" : "failure"};
+  }
   if ( scheme === "pf2e" ) {
     let degree = DEGREES.includes(outcome) ? outcome : null;
     if ( !degree ) {

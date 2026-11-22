@@ -7,7 +7,7 @@
 export const MODULE_ID = "sephrals-roll-requests";
 
 /** The Foundry and system versions the module was verified against (see the self-test). */
-export const TESTED_VERSIONS = {core: "14.370", dnd5e: "6.1.0", pf2e: "8.6.1", swade: "6.0.4", crucible: "0.11.3"};
+export const TESTED_VERSIONS = {core: "14.370", dnd5e: "6.1.0", pf2e: "8.6.1", swade: "6.0.4", crucible: "0.11.3", daggerheart: "2.12.9", tormenta20: "1.6.7"};
 
 /** The hooks other modules can listen to. */
 export const HOOKS = {
@@ -110,12 +110,20 @@ export function addSettingsGear(frame) {
 }
 
 /**
+ * Made-up documents of the sample windows (sample-windows.mjs) by uuid. They are never saved; this lets the real
+ * windows and cards find them like any actor of the world.
+ * @type {Map<string, foundry.abstract.Document>}
+ */
+export const sampleDocs = new Map();
+
+/**
  * Resolve a document reference without waiting (actors and tokens of this world or a scene).
  * @param {string|null} uuid
  * @returns {foundry.abstract.Document|null}
  */
 export function fromUuidQuiet(uuid) {
   if ( !uuid ) return null;
+  if ( sampleDocs.has(uuid) ) return sampleDocs.get(uuid);
   try {
     return fromUuidSync(uuid) ?? null;
   } catch {

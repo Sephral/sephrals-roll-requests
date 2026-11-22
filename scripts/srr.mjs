@@ -16,6 +16,7 @@ import {onDeleteChatMessage, onPreCreateChatMessage, rollEntry, rollRemaining} f
 import {noticeNewVersions, runSelfTest} from "./selftest.mjs";
 import {changeLanguage, registerGmSettings, registerSettings} from "./settings.mjs";
 import {registerUsage} from "./usage.mjs";
+import {sampleWindows} from "./sample-windows.mjs";
 
 /** The name of the tool in the token controls. */
 const TOOL = "srrRequest";
@@ -29,7 +30,7 @@ Hooks.once("init", () => {
   });
   // Counted only on the active GM's client, like every Sephral module
   registerUsage(MODULE_ID, {
-    features: ["request", "groupCheck", "formula", "gmRoll", "silent", "passive", "choice", "preset", "gmRollAll", "requestRepeated", "requestFromHud", "requestFromDirectory", "plannedCreated", "plannedSent", "plannedRegion", "addPlayerPicked"],
+    features: ["request", "groupCheck", "formula", "gmRoll", "silent", "passive", "choice", "preset", "gmRollAll", "requestRepeated", "requestFromHud", "requestFromDirectory", "plannedCreated", "plannedSent", "plannedRegion", "addPlayerPicked", "reactionRequest", "experienceRequest"],
     settings: ["theme", "promptWindow", "promptSound", "gmFastForward"]
   });
   game.keybindings.register(MODULE_ID, "openRequest", {
@@ -121,6 +122,8 @@ Hooks.once("init", () => {
     hooks: {...HOOKS},
     /** Check the module (GM). */
     runSelfTest,
+    /** The windows and cards filled with made-up requests, nothing saved (translators, testing; see samples.mjs). */
+    samples: () => sampleWindows(),
     /** Save the debug file of Sephral's modules (GM): about one chat message, or without an id the recent state. */
     saveDebugFile: messageId => saveDebugFile(messageId ?? null, {moduleId: MODULE_ID})
   };
